@@ -17,12 +17,12 @@
 </head>
 <body>
 <div class="shell">
-  <aside><div class="brand">STERLING <small>CORPORATE HEADQUARTERS</small></div><nav class="nav"><a class="current" href="#overview">Overview</a><a href="#subsidiaries">Subsidiaries</a><a href="#next">Implementation</a></nav></aside>
+  <aside><div class="brand">STERLING <small>CORPORATE HEADQUARTERS</small></div><nav class="nav"><a class="current" href="#overview">Overview</a><a href="#subsidiaries">Subsidiaries</a><a href="#people">People & HR</a><a href="#reconcile">Reconciliation</a><a href="#next">Implementation</a></nav></aside>
   <main>
     <header class="heading"><div><div class="eyebrow">STERLING GROUP / HEADQUARTERS</div><h1>Enterprise Overview</h1></div><button id="signOut" class="btn hidden" type="button">Sign out</button></header>
     <p class="lead">Corporate administration for independently operated Sterling companies. Phase 1 is a controlled foundation: linked identities, financial reporting and synchronization will only be activated after review and verification.</p>
-    <section class="panel auth" id="authBox"><h2>Corporate administrator sign-in</h2><p class="muted">Sign in using a Sterling Corporate Firebase Authentication account. Existing Motors and Mutual credentials are not automatically corporate accounts.</p>
-      <form id="loginForm"><label class="field">Email<input name="email" type="email" autocomplete="username" required></label><label class="field">Password<input name="password" type="password" autocomplete="current-password" required></label><button class="btn primary" type="submit">Sign in</button></form>
+    <section class="panel auth" id="authBox"><h2>Corporate account access</h2><p class="muted">Sign in using a Sterling Corporate Firebase Authentication account. Existing Motors and Mutual credentials are not automatically corporate accounts.</p>
+      <div class="actions"><button class="btn" id="modeSignIn" type="button">Sign in</button><button class="btn" id="modeRegister" type="button">Register account</button></div><form id="loginForm"><label class="field">Email<input name="email" type="email" autocomplete="username" required></label><label class="field">Password<input name="password" type="password" autocomplete="current-password" required></label><button class="btn primary" id="authSubmit" type="submit">Sign in</button></form><div class="actions"><button class="btn hidden" id="verifyEmail" type="button">Send verification email</button><button class="btn hidden" id="claimOwner" type="button">Claim owner access</button></div>
       <div class="notice" id="authMessage" role="status">Sign-in requires Authentication to be enabled in the new Firebase project.</div>
     </section>
     <section id="secure" class="hidden">
@@ -33,7 +33,31 @@
         <article class="panel company"><div><h3>Sterling Motors</h3><p>Firebase: sterling-motors • Dealership operations</p><p><a href="https://github.com/Silly-Cheese/sterling-motors" target="_blank" rel="noopener noreferrer">Open GitHub repository ↗</a></p></div><span class="tag warn">Connection not verified</span></article>
         <article class="panel company"><div><h3>Sterling Mutual Insurance</h3><p>Firebase: sterling-mutual-insurance • Insurance operations</p><p><a href="https://github.com/Silly-Cheese/Sterling-Mutual-Insurance" target="_blank" rel="noopener noreferrer">Open GitHub repository ↗</a></p></div><span class="tag warn">Connection not verified</span></article>
       </div></section>
-      <section class="section panel" id="next"><h2>Phase 1: Implementation controls</h2><p class="muted">Existing employee records, authentication accounts, and all subsidiary data remain untouched. Cross-project access is disabled until consent, schema auditing, and permission tests are complete.</p>
+      <section class="section panel" id="people">
+     <div class="eyebrow">PHASE 2 / CORPORATE HR</div><h2>Employee Directory</h2>
+     <p class="muted">Corporate-only HR profiles. Adding an employee here does not create or modify accounts in Motors or Mutual. Identity reconciliation remains a separate verified process.</p>
+     <form id="addEmployee"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+       <label class="field">Full name<input name="displayName" maxlength="120" required></label>
+       <label class="field">Job title<input name="title" maxlength="100" required></label>
+       <label class="field">Department<input name="department" maxlength="100"></label>
+       <label class="field">Company<select name="subsidiary" style="display:block;width:100%;padding:12px;background:#0e1722;color:white;border:1px solid #3e4b60;border-radius:9px"><option value="corporate">Sterling Corporate</option><option value="motors">Sterling Motors</option><option value="mutual">Sterling Mutual</option></select></label>
+       <label class="field">Employment type<select name="employmentType" style="display:block;width:100%;padding:12px;background:#0e1722;color:white;border:1px solid #3e4b60;border-radius:9px"><option>Hourly</option><option>Salary</option><option>Contract</option></select></label>
+     </div><button class="btn primary" type="submit">Create corporate HR record</button></form>
+     <div class="notice" id="hrStatus" role="status">No operational accounts are created by this action.</div>
+     <label class="field">Search employees<input id="employeeSearch" type="search" placeholder="Name, title or department"></label>
+     <div id="employeeList" class="list"></div>
+    </section>
+    <section class="section panel" id="reconcile">
+      <div class="eyebrow">CORPORATE PEOPLE OPERATIONS / PREVIEW</div><h2>Employee Reconciliation Workspace</h2>
+      <p class="muted">Preview authorized staff-export data from Motors and Mutual. This tool does not upload, persist, merge or grant access to accounts. All matches require verification and administrator review.</p>
+      <div class="actions"><button class="btn primary" type="button" id="sampleData">Load example employees</button><button class="btn" type="button" id="clearData">Clear preview</button></div>
+      <label class="field">Paste a staff export JSON array (max 500 entries, 2 MB). Avoid sensitive or unrelated fields.<textarea id="staffJson" rows="6" style="display:block;width:100%;margin-top:9px;padding:12px;color:#edf2fa;background:#0e1722;border:1px solid #3e4b60;border-radius:9px;resize:vertical" spellcheck="false" placeholder='[{"projectId":"sterling-motors","uid":"...","displayName":"...","isStaff":true}]'></textarea></label>
+      <button type="button" id="previewStaff" class="btn primary">Preview reconciliation</button>
+      <div class="notice" id="reconcileStatus" role="status">No data loaded. Production identity links remain disabled.</div>
+      <div class="cards" id="reconcileCounts"></div>
+      <div id="reconcileResults" class="list"></div>
+    </section>
+    <section class="section panel" id="next"><h2>Phase 1: Implementation controls</h2><p class="muted">Existing employee records, authentication accounts, and all subsidiary data remain untouched. Cross-project access is disabled until consent, schema auditing, and permission tests are complete.</p>
         <div class="actions"><a class="btn" href="https://console.firebase.google.com/project/sterling-corporate/overview" target="_blank" rel="noopener noreferrer">Corporate Firebase ↗</a><a class="btn" href="https://github.com/Silly-Cheese/Sterling-Corporate" target="_blank" rel="noopener noreferrer">Corporate source ↗</a></div></section>
     </section>
     <div class="foot" id="publicFooter">Sterling Corporate • Firebase Spark architecture • No payment processing enabled</div>
@@ -41,8 +65,8 @@
 </div>
 <script type="module">
   import {initializeApp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-  import {getFirestore,doc,getDoc} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+  import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendEmailVerification,reload,signOut} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+  import {getFirestore,doc,getDoc,writeBatch,serverTimestamp,collection,addDoc,getDocs,query,limit,updateDoc} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
   const firebaseConfig={
     apiKey:"AIzaSyBwByEhvJhRB-x_JfUm9WWWNqATpalcsPw",
     authDomain:"sterling-corporate.firebaseapp.com",
@@ -56,20 +80,128 @@
   const db=getFirestore(app);
   const $=id=>document.getElementById(id);
   const message=text=>$("authMessage").textContent=text;
+  let registration=false;
+  $("modeRegister").addEventListener("click",()=>{registration=true;$("authSubmit").textContent="Create owner account";message("First-owner setup requires verified email and unclaimed Corporate bootstrap. Complete this promptly before sharing the site.");});
+  $("modeSignIn").addEventListener("click",()=>{registration=false;$("authSubmit").textContent="Sign in";message("Sign in with an existing Corporate account.");});
   $("loginForm").addEventListener("submit",async e=>{
     e.preventDefault();const form=e.currentTarget;
-    try{message("Signing in…");await signInWithEmailAndPassword(auth,form.elements.email.value,form.elements.password.value);form.reset()}
-    catch(err){message("Sign-in failed. Check credentials and enable Email/Password authentication in Corporate Firebase. ("+(err?.code||"unknown")+")")}
+    try{
+      message("Authenticating…");
+      const email=form.elements.email.value,password=form.elements.password.value;
+      if(registration){await createUserWithEmailAndPassword(auth,email,password);await sendEmailVerification(auth.currentUser);message("Account created. Verify your email using the message sent to you, then return and click Claim owner access.");}
+      else {await signInWithEmailAndPassword(auth,email,password);}
+      form.reset();
+    }catch(err){message("Authentication failed: "+(err?.code||"unknown"));}
   });
   $("signOut").addEventListener("click",()=>signOut(auth));
-  onAuthStateChanged(auth,async user=>{
-    $("secure").classList.add("hidden");$("signOut").classList.add("hidden");$("authBox").classList.remove("hidden");
-    if(!user){message("Sign in with a Corporate administrator account to view the registry.");return}
+  const showBootstrapHelp=async user=>{
+    if(!user)return;
     try{
-      const grant=await getDoc(doc(db,"corporateAdmins",user.uid));
-      if(!grant.exists()||grant.data()?.active!==true){message("Signed in, but this account has not been assigned Corporate administrator access. Set corporateAdmins/"+user.uid+" with active=true in the Firebase Console.");return}
-      $("authBox").classList.add("hidden");$("secure").classList.remove("hidden");$("signOut").classList.remove("hidden");
-    }catch(err){message("Administrator verification failed. Deploy restrictive Corporate Firestore rules and verify Firestore is enabled. ("+(err?.code||"unknown")+")")}
+      await reload(user);
+      const bootstrap=await getDoc(doc(db,"system","bootstrap"));
+      if(bootstrap.exists()){
+        $("claimOwner").classList.add("hidden");
+        message("You are signed in, but your account is not a Corporate administrator. The initial owner must grant access through a future administrator workflow.");
+      }else if(user.emailVerified){
+        $("claimOwner").classList.remove("hidden");$("verifyEmail").classList.add("hidden");
+        message("Email verified. Initial Corporate setup is available: select Claim owner access. If this fails with permission-denied, deploy the updated Corporate firestore.rules first.");
+      }else{
+        $("claimOwner").classList.add("hidden");$("verifyEmail").classList.remove("hidden");
+        message("Your account is signed in. Verify your email, then click Claim owner access. If you already verified, refresh this page and try again.");
+      }
+    }catch(e){
+      $("claimOwner").classList.add("hidden");
+      message("Unable to check owner bootstrap ("+(e.code||e.message)+"). Deploy the Phase 2 Corporate Firestore rules in Firebase Console first.");
+    }
+  };
+  $("verifyEmail").addEventListener("click",async()=>{try{await sendEmailVerification(auth.currentUser);message("Verification email sent. Check inbox and spam folder.");}catch(e){message(e.code||e.message)}});
+  $("claimOwner").addEventListener("click",async()=>{
+    const user=auth.currentUser;if(!user)return;
+    try{
+      await reload(user);
+      if(!user.emailVerified){message("Verify the email address first, then retry.");return;}
+      const bootstrapRef=doc(db,"system","bootstrap"),adminRef=doc(db,"corporateAdmins",user.uid);
+      const existing=await getDoc(bootstrapRef);
+      if(existing.exists()){message("Corporate already has an owner. Owner bootstrap cannot be repeated.");return;}
+      const batch=writeBatch(db);
+      batch.set(bootstrapRef,{ownerUid:user.uid,initialized:true,createdAt:serverTimestamp()});
+      batch.set(adminRef,{active:true,role:"owner",createdAt:serverTimestamp()});
+      await batch.commit();message("Owner registration complete. Loading Corporate…");
+      await refreshCorporate(user);
+    }catch(e){message("Bootstrap failed: "+(e.code||e.message));}
+  });
+  let corporateUser=null,employees=[];
+  const renderEmployees=()=>{
+    const target=$("employeeList");target.replaceChildren();
+    const term=$("employeeSearch").value.trim().toLowerCase();
+    const filtered=employees.filter(e=>[e.displayName,e.title,e.department,e.subsidiary].some(v=>String(v||"").toLowerCase().includes(term)));
+    if(!filtered.length){target.textContent="No matching Corporate HR records.";return;}
+    for(const employee of filtered){
+      const card=document.createElement("article");card.className="panel company";
+      const detail=document.createElement("div"),name=document.createElement("h3"),desc=document.createElement("p");
+      name.textContent=employee.displayName;desc.textContent=[employee.title,employee.department,employee.subsidiary].filter(Boolean).join(" • ");
+      detail.append(name,desc);card.append(detail);
+      const select=document.createElement("select");
+      select.setAttribute("aria-label","Employment status for "+employee.displayName);
+      select.style.cssText="padding:9px;border-radius:8px;background:#0e1722;color:white;border:1px solid #42516a";
+      for(const status of ["active","leave","inactive"]){const option=document.createElement("option");option.value=status;option.textContent=status;select.append(option);}
+      select.value=employee.status;
+      select.addEventListener("change",async()=>{try{await updateDoc(doc(db,"corporateEmployees",employee.id),{status:select.value,updatedAt:serverTimestamp()});employee.status=select.value;$("hrStatus").textContent="Status saved in Corporate HR only.";}catch(e){select.value=employee.status;$("hrStatus").textContent="Update failed: "+(e.code||e.message)}});
+      card.append(select);target.append(card);
+    }
+  };
+  const loadEmployees=async()=>{
+    const snap=await getDocs(query(collection(db,"corporateEmployees"),limit(100)));
+    employees=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.displayName.localeCompare(b.displayName));
+    renderEmployees();
+  };
+  $("employeeSearch").addEventListener("input",renderEmployees);
+  $("addEmployee").addEventListener("submit",async event=>{
+    event.preventDefault();if(!corporateUser)return;
+    const form=event.currentTarget,data=Object.fromEntries(new FormData(form).entries());
+    try{
+      await addDoc(collection(db,"corporateEmployees"),{
+        displayName:String(data.displayName).trim(),title:String(data.title).trim(),
+        department:String(data.department).trim(),subsidiary:data.subsidiary,
+        employmentType:data.employmentType,status:"active",createdBy:corporateUser.uid,
+        createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+      });
+      form.reset();$("hrStatus").textContent="Corporate HR record saved. No subsidiary authentication accounts were changed.";await loadEmployees();
+    }catch(e){$("hrStatus").textContent="Save failed: "+(e.code||e.message);}
+  });
+  const refreshCorporate=async user=>{
+    const grant=await getDoc(doc(db,"corporateAdmins",user.uid));
+    if(!grant.exists()||grant.data()?.active!==true){message("This account is not an authorized Corporate administrator.");return;}
+    corporateUser=user;$("authBox").classList.add("hidden");$("secure").classList.remove("hidden");$("signOut").classList.remove("hidden");
+    try{await loadEmployees();}catch(e){$("hrStatus").textContent="Employees could not be loaded: "+(e.code||e.message);}
+  };
+  const {parseStaffExport,reconciliationCandidates}=await import("./integration/reconciliation.js");
+  const example=[{projectId:"sterling-motors",uid:"demo-m1",displayName:"Jordan Mitchell",email:"jordan@example.invalid",isStaff:true,status:"active",role:"Sales Manager"},
+    {projectId:"sterling-mutual-insurance",uid:"demo-u1",displayName:"Jordan Mitchell",email:"jordan@example.invalid",status:"active",title:"Claims Adjuster"},
+    {projectId:"sterling-motors",uid:"demo-m2",displayName:"Sarah Williams",isStaff:true,status:"active",role:"Finance Officer"}];
+  const safeText=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const clearPreview=()=>{$("staffJson").value="";$("reconcileCounts").replaceChildren();$("reconcileResults").replaceChildren();$("reconcileStatus").textContent="Preview cleared. No data saved.";};
+  $("sampleData").addEventListener("click",()=>{$("staffJson").value=JSON.stringify(example,null,2);$("previewStaff").click()});
+  $("clearData").addEventListener("click",clearPreview);
+  $("previewStaff").addEventListener("click",()=>{
+    $("reconcileCounts").replaceChildren();$("reconcileResults").replaceChildren();
+    try{
+      const records=parseStaffExport($("staffJson").value),candidates=reconciliationCandidates(records);
+      $("reconcileCounts").innerHTML='<div class="panel"><div class="label">Previewed staff records</div><div class="stat">'+records.filter(x=>x.isStaff).length+'</div></div><div class="panel"><div class="label">Possible cross-project matches</div><div class="stat">'+candidates.length+'</div></div><div class="panel"><div class="label">Approved identity links</div><div class="stat">0</div></div>';
+      $("reconcileStatus").textContent="Read-only local preview complete. No accounts were linked or modified.";
+      if(!candidates.length){$("reconcileResults").textContent="No candidate matches. This is not proof that accounts are unrelated.";return;}
+      for(const c of candidates){
+        const article=document.createElement("article");article.className="panel company";
+        article.innerHTML='<div><h3>'+safeText(c.left.name)+' ↔ '+safeText(c.right.name)+'</h3><p>'+safeText(c.left.projectId)+' / '+safeText(c.left.title)+' → '+safeText(c.right.projectId)+' / '+safeText(c.right.title)+'</p><p>Potential match: '+safeText(c.reason)+'; explicit identity verification required.</p></div><span class="tag warn">Review required</span>';
+        $("reconcileResults").append(article);
+      }
+    }catch(e){$("reconcileStatus").textContent="Preview failed: "+e.message;}
+  });
+  onAuthStateChanged(auth,async user=>{
+    corporateUser=null;clearPreview();$("secure").classList.add("hidden");$("signOut").classList.add("hidden");$("authBox").classList.remove("hidden");
+    $("verifyEmail").classList.add("hidden");$("claimOwner").classList.add("hidden");
+    if(!user){message("Sign in, or create the first verified owner account.");return;}
+    try{const grant=await getDoc(doc(db,"corporateAdmins",user.uid));if(grant.exists()&&grant.data()?.active===true){await refreshCorporate(user);$("claimOwner").classList.add("hidden");$("verifyEmail").classList.add("hidden");}else{await showBootstrapHelp(user);}}catch(e){message("Corporate authorization failed: "+(e.code||e.message));}
   });
 </script>
 </body>
