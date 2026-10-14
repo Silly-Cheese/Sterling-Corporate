@@ -99,7 +99,7 @@
       if(active)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");
     });
     document.querySelectorAll(".workspace-section").forEach(section=>section.classList.toggle("is-active",section.id===target));
-    $("overviewMetrics").hidden=target!=="overview";
+    document.getElementById("overviewMetrics").hidden=target!=="overview";
     const heading=document.querySelector(".heading h1");if(heading)heading.textContent=pageTitles[target];
     document.querySelector("main>.lead").hidden=target!=="overview";
     window.scrollTo({top:0,behavior:"instant"});
