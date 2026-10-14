@@ -211,8 +211,14 @@
     }catch(e){$("hrStatus").textContent="Save failed: "+(e.code||e.message);}
   });
   const {mountPeopleOps}=await import("./people-ops.js");
-  const {mountIntegrationReadiness}=await import("./integration/readiness-ui.js");
-  mountIntegrationReadiness();
+  // An optional integration module must never block sign-in or the HR workspace.
+  import("./integration/readiness-ui.js?v=20261014b").then(({mountIntegrationReadiness})=>{
+    mountIntegrationReadiness();
+  }).catch(error=>{
+    const panel=document.getElementById("integrationReadiness");
+    if(panel){const notice=document.createElement("div");notice.className="notice";notice.textContent="Integration Manager unavailable: "+(error.message||"Unable to load module")+". Refresh after the latest GitHub Pages deployment.";panel.append(notice);}
+    console.error("Integration Manager module error",error);
+  });
   let peopleOps=null,phase3=null;
   const refreshCorporate=async user=>{
     const grant=await getDoc(doc(db,"corporateAdmins",user.uid));
