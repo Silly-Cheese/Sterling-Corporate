@@ -37,7 +37,7 @@
       </div></section>
       <section class="section panel workspace-section" id="people">
      <div class="eyebrow">PHASE 2 / CORPORATE HR</div><h2>Employee Directory</h2>
-     <p class="muted">Corporate-only HR profiles. Adding an employee here does not create or modify accounts in Motors or Mutual. Identity reconciliation remains a separate verified process.</p>
+     <p class="muted">This directory contains Corporate HR profiles only. Employees already in Motors or Mutual will not appear until an authorized reconciliation/import is completed. Successful subsidiary sign-in is not an employee import.</p>
      <form id="addEmployee"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
        <label class="field">Full name<input name="displayName" maxlength="120" required></label>
        <label class="field">Job title<input name="title" maxlength="100" required></label>
@@ -195,9 +195,16 @@
     }
   };
   const loadEmployees=async()=>{
-    const snap=await getDocs(query(collection(db,"corporateEmployees"),limit(100)));
-    employees=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.displayName.localeCompare(b.displayName));
-    renderEmployees();
+    try {
+      const snap=await getDocs(query(collection(db,"corporateEmployees"),limit(100)));
+      employees=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.displayName.localeCompare(b.displayName));
+      $("hrStatus").textContent=snap.empty?"No Corporate HR records exist yet. Existing Motors/Mutual employees remain in their own projects; visit Integration Manager and Reconciliation to begin linking.":"Corporate HR directory loaded ("+snap.size+" record(s), maximum 100).";
+      renderEmployees();
+    } catch(error){
+      employees=[];renderEmployees();
+      $("hrStatus").textContent="Cannot read Corporate HR employee records ("+(error.code||"unknown")+"). Check your Corporate administrator grant and deployed sterling-corporate Firestore rules. Motors and Mutual staff records are not stored here.";
+      throw error;
+    }
   };
   $("cancelEdit").addEventListener("click",()=>{$("employeeEditor").close();editingEmployeeId=null;});
   $("employeeEditor").addEventListener("close",()=>{editingEmployeeId=null;});
