@@ -1,7 +1,7 @@
 import {reconcile,normalize} from "./sync-core.mjs";
 import {writeFile,mkdir} from "node:fs/promises";
 const DRY=process.argv.includes("--dry-run");
-const result={mode:"READ_ONLY",startedAt:new Date().toISOString(),projects:["sterling-motors","sterling-mutual-insurance"],sourceCounts:{},conflicts:[],changedCount:0,status:"not-started"};
+const result={mode:"READ_ONLY",startedAt:new Date().toISOString(),projects:["sterling-motors","sterling-mutual-insurance"],sourceCounts:{},conflicts:[],observedCount:0,coverage:'bounded-sample',status:"not-started"};
 function log(message){process.stdout.write(JSON.stringify({timestamp:new Date().toISOString(),message})+"\n")}
 async function main(){
  if(DRY){result.status="dry-run";log("Dry-run: no Firebase credentials accessed");return}
@@ -22,19 +22,17 @@ async function main(){
    const app=initializeApp({credential:cert(credentials),projectId:id},"sync-"+key);apps.push(app);
    const db=getFirestore(app);
    // Bounded, paginated source reads; only explicitly recognized staff records become observations.
-   let cursor,sourceCount=0;
+   let sourceCount=0;
    while(true){
-    let query=db.collection(collection).orderBy("__name__").limit(200);
-    if(cursor)query=query.startAfter(cursor);
+    let query=db.collection(collection).orderBy("__name__").limit(50);
     const snap=await query.get();if(snap.empty)break;
     for(const doc of snap.docs){const record=normalize(key,doc.id,doc.data());if(record)inputs.push(record)}
-    sourceCount+=snap.size;cursor=snap.docs.at(-1);
-    if(sourceCount>10000)throw Error("Safety cap exceeded for "+key);
-    if(snap.size<200)break;
+    sourceCount+=snap.size;
+    break; // Free-tier safety: at most 50 reads per subsidiary per run.
    }
    result.sourceCounts[key]=sourceCount;
   }
-  const output=reconcile(inputs);result.changedCount=output.records.length;result.conflicts=output.conflicts;result.status=output.conflicts.length?"conflicts-found":"observed";
+  const output=reconcile(inputs);result.observedCount=output.records.length;result.conflicts=output.conflicts;result.status=output.conflicts.length?"conflicts-found":"observed";
   // No Firestore writes, account writes, local PII exports, or cross-project mutation.
   log("Read-only observation complete: "+JSON.stringify({sourceCounts:result.sourceCounts,records:output.records.length,conflicts:output.conflicts.length}));
   if(output.conflicts.length)process.exitCode=3;
