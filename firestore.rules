@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isCorporateAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/corporateAdmins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/corporateAdmins/$(request.auth.uid)).data.active == true;
+    }
+
+    // Admin records are bootstrap-managed exclusively from Firebase Console
+    // or a trusted administrative service. The browser cannot create admins.
+    match /corporateAdmins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Future authoritative registry and integration status: admin read-only.
+    // No direct browser writes until a separately reviewed workflow exists.
+    match /subsidiaries/{id} {
+      allow read: if isCorporateAdmin();
+      allow write: if false;
+    }
+    match /integrationRuns/{runId} {
+      allow read: if isCorporateAdmin();
+      allow write: if false;
+    }
+    match /employeeIdentityLinks/{linkId} {
+      allow read: if isCorporateAdmin();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
