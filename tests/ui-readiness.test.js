@@ -14,7 +14,7 @@ test("Integration readiness module parses",()=>{
 test("Connection verification never enumerates the staff collection",()=>{
  const source=fs.readFileSync(new URL("../integration/readiness-ui.js",import.meta.url),"utf8");
  assert.match(source,/getDoc\(doc\(db,adapter.staffCollection,credential.user.uid\)\)/);
- assert.match(source,/inMemoryPersistence/);
+ assert.match(source,/browserLocalPersistence/);
  assert.doesNotMatch(source,/getDocs\(/);
 });
 
