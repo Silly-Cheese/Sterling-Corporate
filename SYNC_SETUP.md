@@ -30,3 +30,13 @@ It produces a **sanitized JSON run summary** as a short-lived GitHub Actions art
 - Persistent synchronization state, changed-record deltas across runs, cross-project data copying, Corporate database audit records, identity approval/revocation, or two-way synchronization.
 - Privileged writeback is explicitly out of scope. It requires separate code review, credential scopes and tests.
 - A service-account read-only role protects write access, but the code should still undergo static and behavioral review before activation.
+
+## Development 1 — Corporate read-only employee import
+
+The sync can now copy **limited, read-only staff snapshots** into the separate Corporate collection `subsidiaryStaffSnapshots`. It does NOT modify the original staff collections and does NOT create records in `corporateEmployees`. This is an explicitly enabled import feature, not comprehensive two-way synchronization.
+
+To enable importing, create a separate service-account credential for Firebase project `sterling-corporate` with the minimum Firestore write permissions needed for `subsidiaryStaffSnapshots`, stored as repository secret `STERLING_CORPORATE_SERVICE_ACCOUNT_JSON`. **Do not reuse the Motors or Mutual admin credentials for this purpose.** Admin SDK bypasses Firestore Security Rules; the project ID check and constrained code help but do not replace IAM restriction.
+
+Deploy the latest `firestore.rules` to `sterling-corporate` so your authorized Corporate admin session can read `subsidiaryStaffSnapshots`. Once the Corporate credential is configured, set repository variable `STERLING_CORPORATE_IMPORT_ENABLED=true`. Run the workflow manually, then visit Corporate → People & HR → Subsidiary Employee Directory and click Refresh imported records.
+
+The initial five-minute scan covers **at most 50 source documents per subsidiary**, sorted by document ID, so records outside this window will not import. No deletion or termination is inferred for missing people. Full coverage requires a stateful, cursor-based incremental scanner. The directory is limited to 100 snapshot documents per browser read, and does not yet paginate.
