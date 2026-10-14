@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0c1118">
+  <meta name="theme-color" content="#0c1118"><meta name="referrer" content="no-referrer">
   <title>Sterling Corporate — Headquarters</title>
   <style>
     :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#e8ecf2;background:#0c1118;font-synthesis:none}
@@ -12,7 +12,7 @@
     main{width:100%;max-width:1250px;padding:35px 42px;margin:auto}.eyebrow{font-size:11px;color:#86a1c2;letter-spacing:.19em;font-weight:700}.heading{display:flex;align-items:center;justify-content:space-between;gap:16px}h1{font-size:clamp(27px,4vw,39px);letter-spacing:-.035em;margin:10px 0}h2{font-size:17px;margin:0}.lead,.muted{color:#9caabd}.lead{line-height:1.6;max-width:780px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:25px 0}.panel{background:#141d29;border:1px solid #2a3545;border-radius:16px;padding:21px}.stat{font-size:29px;font-weight:750;margin:12px 0 4px}.label{font-size:12px;color:#94a4b6}.section{margin-top:30px}.list{display:grid;gap:13px;margin-top:17px}.company{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}.company h3{margin:0 0 7px;font-size:16px}.company p{margin:0;font-size:13px;color:#9caabd}.tag{border-radius:30px;padding:7px 11px;font-size:11px;border:1px solid #45526a;color:#c0ccdd;white-space:nowrap}.tag.warn{border-color:#685535;color:#eac58e}.tag.ok{border-color:#326e58;color:#9bdec3}
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:17px}.btn{padding:10px 14px;border-radius:9px;border:1px solid #45536a;background:#223248;color:#ecf2fb}.btn.primary{background:#d9e7fa;color:#0c1625;border-color:#d9e7fa;font-weight:700}.btn:disabled{opacity:.5;cursor:not-allowed}
     .auth{max-width:520px;margin:30px auto;padding:29px}.field{display:block;color:#bdc9d8;font-size:13px;margin:14px 0}.field input{display:block;width:100%;margin-top:7px;padding:12px;background:#0e1722;color:white;border:1px solid #3e4b60;border-radius:9px}.hidden{display:none}.notice{padding:13px 15px;border-radius:10px;background:#1b2836;color:#c6d4e5;margin-top:16px;font-size:13px;line-height:1.55}.foot{margin-top:35px;font-size:12px;color:#8393a8}
-    .nav a:focus-visible,.btn:focus-visible,input:focus-visible{outline:2px solid #b9d3ff;outline-offset:2px}.nav a:hover{background:#192535;color:#fff}.auth .actions{margin:22px 0 16px}.auth .btn{min-height:43px}.auth .field{margin:17px 0}.auth .notice{border-left:3px solid #8dafdb}.panel{box-shadow:0 8px 22px rgba(0,0,0,.12)}.lead{max-width:720px}@media(max-width:800px){.shell{display:block}aside{padding:17px 20px;border-right:0;border-bottom:1px solid #293140}.nav{margin-top:15px}.nav a{display:inline-block;padding:9px}main{padding:24px 19px}.cards{grid-template-columns:1fr}.heading{align-items:flex-start;flex-direction:column}}
+    .nav a:focus-visible,.btn:focus-visible,input:focus-visible{outline:2px solid #b9d3ff;outline-offset:2px}.nav a:hover{background:#192535;color:#fff}.auth .actions{margin:22px 0 16px}.auth .btn{min-height:43px}.auth .field{margin:17px 0}.auth .notice{border-left:3px solid #8dafdb}.panel{box-shadow:0 8px 22px rgba(0,0,0,.12)}.lead{max-width:720px}.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:16px 0}.toolbar .field{flex:1;min-width:170px;margin:0}.toolbar select{width:100%;margin-top:7px;padding:12px;border-radius:9px;border:1px solid #3e4b60;background:#0e1722;color:#f2f5fa}.inline-note{font-size:12px;color:#94a4b6}.auth #authMessage{overflow-wrap:anywhere}@media(max-width:800px){.shell{display:block}aside{padding:17px 20px;border-right:0;border-bottom:1px solid #293140}.nav{margin-top:15px}.nav a{display:inline-block;padding:9px}main{padding:24px 19px}.cards{grid-template-columns:1fr}.heading{align-items:flex-start;flex-direction:column}}
   </style>
 </head>
 <body>
@@ -44,7 +44,7 @@
        <label class="field">Employment type<select name="employmentType" style="display:block;width:100%;padding:12px;background:#0e1722;color:white;border:1px solid #3e4b60;border-radius:9px"><option>Hourly</option><option>Salary</option><option>Contract</option></select></label>
      </div><button class="btn primary" type="submit">Create corporate HR record</button></form>
      <div class="notice" id="hrStatus" role="status">No operational accounts are created by this action.</div>
-     <label class="field">Search employees<input id="employeeSearch" type="search" placeholder="Name, title or department"></label>
+     <div class="toolbar"><label class="field">Find employees<input id="employeeSearch" type="search" placeholder="Name, title, company or department"></label><label class="field">Status<select id="employeeStatusFilter"><option value="all">All statuses</option><option value="active">Active</option><option value="leave">On leave</option><option value="inactive">Inactive</option></select></label><button class="btn" id="reloadEmployees" type="button">Refresh</button></div><p id="employeeCount" class="inline-note" role="status">Employee records will appear after sign-in.</p>
      <div id="employeeList" class="list"></div>
     </section>
     <section class="section panel" id="reconcile">
@@ -75,6 +75,8 @@
     messagingSenderId:"218145815397",
     appId:"1:218145815397:web:ba9865ff93ca84f808bf8c"
   };
+  // Do not retain sensitive information accidentally supplied as URL parameters.
+  if([...new URLSearchParams(location.search).keys()].some(key=>/password|token|secret|api[_-]?key/i.test(key))){history.replaceState(null,"",location.pathname+location.hash);}
   const app=initializeApp(firebaseConfig);
   const auth=getAuth(app);
   const db=getFirestore(app);
@@ -111,7 +113,7 @@
       }
     }catch(e){
       $("claimOwner").classList.add("hidden");
-      message("Unable to check owner bootstrap ("+(e.code||e.message)+"). Deploy the Phase 2 Corporate Firestore rules in Firebase Console first.");
+      message("Unable to check owner bootstrap ("+(e.code||e.message)+"). Check the rules published to sterling-corporate and confirm your signed-in account is authorized.");
     }
   };
   $("verifyEmail").addEventListener("click",async()=>{try{await sendEmailVerification(auth.currentUser);message("Verification email sent. Check inbox and spam folder.");}catch(e){message(e.code||e.message)}});
@@ -136,7 +138,9 @@
   const renderEmployees=()=>{
     const target=$("employeeList");target.replaceChildren();
     const term=$("employeeSearch").value.trim().toLowerCase();
-    const filtered=employees.filter(e=>[e.displayName,e.title,e.department,e.subsidiary].some(v=>String(v||"").toLowerCase().includes(term)));
+    const statusFilter=$("employeeStatusFilter").value;
+    const filtered=employees.filter(e=>(statusFilter==="all"||e.status===statusFilter)&&[e.displayName,e.title,e.department,e.subsidiary].some(v=>String(v||"").toLowerCase().includes(term)));
+    $("employeeCount").textContent=`Showing ${filtered.length} of ${employees.length} loaded Corporate employee records (maximum 100).`;
     if(!filtered.length){target.textContent="No matching Corporate HR records.";return;}
     for(const employee of filtered){
       const card=document.createElement("article");card.className="panel company";
@@ -158,6 +162,8 @@
     renderEmployees();
   };
   $("employeeSearch").addEventListener("input",renderEmployees);
+  $("employeeStatusFilter").addEventListener("change",renderEmployees);
+  $("reloadEmployees").addEventListener("click",async()=>{try{await loadEmployees();$("hrStatus").textContent="Directory refreshed.";}catch(e){$("hrStatus").textContent="Refresh failed: "+(e.code||e.message)}});
   $("addEmployee").addEventListener("submit",async event=>{
     event.preventDefault();if(!corporateUser)return;
     const form=event.currentTarget,data=Object.fromEntries(new FormData(form).entries());
