@@ -1,4 +1,4 @@
-import {ADAPTERS} from "./integration/adapter-contract.js";
+import {ADAPTERS} from "./adapter-contract.js";
 export function mountIntegrationReadiness(){
  const root=document.getElementById("integrationReadiness");
  if(!root)return;
