@@ -1,9 +1,9 @@
 # Five-minute Spark read-only synchronization
 
 ## Implementation
-The workflow `.github/workflows/sterling-readonly-sync.yml` runs on `*/5 * * * *` when explicitly enabled. GitHub may delay or skip scheduled runs during high load. The workflow reads existing Motors `users` and Mutual `staff` collections with pagination; it never writes to Firebase, provisions users, links identities, or changes employee accounts.
+The workflow `.github/workflows/sterling-readonly-sync.yml` runs on `*/5 * * * *` when explicitly enabled. GitHub may delay or skip scheduled runs during high load. The workflow reads existing Motors `users` and Mutual `staff` collections with a capped query; it never writes to Firebase, provisions users, links identities, or changes employee accounts.
 
-It produces a **sanitized JSON run summary** as a short-lived GitHub Actions artifact: project scan counts, observed staff count, conflict count and status. No names, UIDs, emails or Firestore documents are saved to artifacts. No credentials are logged. Run logs may show Firebase error classes.
+It produces a **sanitized JSON run summary** as a short-lived GitHub Actions artifact: project sampled-document counts, observed staff count, conflict count and status. No names, UIDs, emails or Firestore documents are saved to artifacts. No credentials are logged. Run logs may show Firebase error classes.
 
 ## Activate safely
 1. Create separate, narrowly scoped credentials with Firestore read-only access to each existing Firebase project. Configure IAM and Firestore access policies carefully. Service-account Admin SDK access bypasses Firestore Security Rules; prefer the least privilege available at the IAM layer.
@@ -12,14 +12,14 @@ It produces a **sanitized JSON run summary** as a short-lived GitHub Actions art
    - `STERLING_MUTUAL_SERVICE_ACCOUNT_JSON`
 3. Test once manually using **Actions → Sterling read-only integration sync → Run workflow** after setting the variable below. Check the sanitized artifact and confirm read-only results.
 4. Create repository variable `STERLING_READONLY_SYNC_ENABLED` with value `true`. Until this exists, the scheduled job will **skip**, not access Firebase.
-5. Review Actions logs and read counts on both projects, ensuring Spark quotas are not exceeded. Disable the variable promptly if abnormal reads occur.
+5. This first release only samples the first 50 ordered documents; it cannot guarantee coverage of all employees. A stateful incremental cursor is needed for full coverage. Review Actions logs and read counts on both projects, ensuring Spark quotas are not exceeded. Disable the variable promptly if abnormal reads occur.
 
 **Never** copy service account JSON into source code, chat messages, GitHub issues or a public web application. Avoid broad roles such as Editor or Owner for sync credentials.
 
 ## Safeguards
 - Zero Firebase writes in the job; no cross-project permissions are introduced.
 - Strict expected project ID checks before any reads.
-- Bounded pages of 200 with a 10,000-document safety cap per collection.
+- At most 50 source documents sampled per project per run (~14,400 document reads/project/day if every 5-minute run executes), leaving room for other Spark operations. This is NOT complete enumeration or a rotating full scan.
 - Motors records must be staff (isStaff true); no insurance customer, policy, claim or sales collections are read.
 - Project-qualified identity references and deterministic hash comparisons; no name/email auto-merging.
 - Missing records do **not** imply terminations.
