@@ -23,7 +23,7 @@ export function mountIntegrationReadiness(){
  const refreshSummary=()=>{const el=root.querySelector("#integrationSummary");if(el)el.textContent=`${sessions.size} of ${Object.keys(ADAPTERS).length} staff sessions verified • Automatic synchronization disabled`;};
  const summary=document.createElement("div");summary.id="integrationSummary";summary.className="notice";root.append(summary);refreshSummary();
  for(const [key,adapter] of Object.entries(ADAPTERS)){
-  const panel=document.createElement("article");panel.className="panel";panel.style.marginTop="12px";panel.style.padding="20px";
+  const panel=document.createElement("article");panel.className="panel integration-card";panel.style.marginTop="12px";panel.style.padding="20px";
   const heading=document.createElement("h3");heading.textContent=key==="motors"?"Sterling Motors":"Sterling Mutual Insurance";
   const detail=document.createElement("p");detail.className="muted";detail.textContent="Firebase: "+adapter.projectId+" • Personnel collection: "+adapter.staffCollection;
   const status=document.createElement("div");status.className="notice";status.setAttribute("role","status");status.textContent="Not verified — no active connection";
@@ -38,7 +38,7 @@ export function mountIntegrationReadiness(){
   form.append(emailLabel,passLabel,btn);
   const controls=document.createElement("div");controls.className="actions";controls.append(disconnect);disconnect.hidden=true;
   const verifiedInfo=document.createElement("div");verifiedInfo.className="inline-note";verifiedInfo.hidden=true;
-  const setConnected=(active,person)=>{form.hidden=active;disconnect.hidden=!active;verifiedInfo.hidden=!active;pill.className=active?"tag ok":"tag warn";pill.textContent=active?"Staff verified":"Not verified";if(active&&person)verifiedInfo.textContent=`${person.displayName||"Staff member"} • ${person.jobTitle||"Staff"} • Active subsidiary identity verified`;refreshSummary();};
+  const setConnected=(active,person)=>{panel.classList.toggle("is-verified",active);form.hidden=active;form.style.display=active?"none":"";disconnect.hidden=!active;verifiedInfo.hidden=!active;pill.className=active?"tag ok":"tag warn";pill.textContent=active?"Staff verified":"Not verified";if(active&&person)verifiedInfo.textContent=`${person.displayName||"Staff member"} • ${person.jobTitle||"Staff"} • Active subsidiary identity verified`;refreshSummary();};
   form.addEventListener("submit",async event=>{
    event.preventDefault();btn.disabled=true;status.textContent="Authenticating and testing existing staff permissions…";
    try{
@@ -61,7 +61,7 @@ export function mountIntegrationReadiness(){
    const auth=sessions.get(key);if(auth){await signOut(auth).catch(()=>{});sessions.delete(key)}
    identities.delete(key);notify();pass.value="";email.value="";setConnected(false);updateComparison();status.textContent="Disconnected. No data was stored in Corporate.";
   });
-  const steps=document.createElement("p");steps.className="inline-note";steps.textContent="This verification checks only your own account and does not enable corporate synchronization.";
+  const steps=document.createElement("p");steps.className="inline-note";steps.textContent="Staff identity verified locally. Corporate synchronization and permissions remain separate.";
   panel.append(header,status,verifiedInfo,form,controls,steps);root.append(panel);
  }
  const caution=document.createElement("div");caution.className="notice";caution.textContent="Separate Firebase projects keep separate login sessions. Authentication uses Firebase directly for the selected subsidiary; no passwords are saved to Firestore. Do not use another employee's credentials.";root.append(caution);
