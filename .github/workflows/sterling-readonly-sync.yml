@@ -23,6 +23,8 @@ jobs:
         env:
           STERLING_MOTORS_SERVICE_ACCOUNT_JSON: ${{ secrets.STERLING_MOTORS_SERVICE_ACCOUNT_JSON }}
           STERLING_MUTUAL_SERVICE_ACCOUNT_JSON: ${{ secrets.STERLING_MUTUAL_SERVICE_ACCOUNT_JSON }}
+          STERLING_CORPORATE_SERVICE_ACCOUNT_JSON: ${{ secrets.STERLING_CORPORATE_SERVICE_ACCOUNT_JSON }}
+          STERLING_CORPORATE_IMPORT_ENABLED: ${{ vars.STERLING_CORPORATE_IMPORT_ENABLED }}
         run: npm run sync:read-only
       - name: Retain sanitized execution summary
         if: always()
