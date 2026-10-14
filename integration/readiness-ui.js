@@ -14,6 +14,9 @@ export function mountIntegrationReadiness(){
  const intro=document.createElement("p");intro.className="muted";intro.textContent="Verify access to your own existing subsidiary staff profile. No record is copied, and no Corporate identity link is created.";root.append(intro);
  const sessions=new Map();
  const identities=new Map();
+ const identityCandidates=()=>[...identities.entries()].map(([company,i])=>({key:ADAPTERS[company].projectId+":"+i.uid,projectId:ADAPTERS[company].projectId,uid:i.uid,displayName:i.displayName||"Verified staff account"}));
+ window.sterlingIdentityCandidates=identityCandidates;
+ const notify=()=>window.dispatchEvent(new CustomEvent("sterling-identities-changed"));
  const comparison=document.createElement("div");comparison.className="notice";comparison.setAttribute("role","status");root.append(comparison);
  const updateComparison=()=>{const a=identities.get("motors"),b=identities.get("mutual");if(!a||!b){comparison.textContent="Identity review: Verify your existing accounts in both subsidiaries to compare their identity evidence. Nothing will be linked automatically.";return;}const matched=a.verifiedEmail&&b.verifiedEmail&&a.email===b.email;comparison.textContent=matched?"Identity review candidate: Both sessions have the same verified email address. These are still distinct Firebase UIDs; a Corporate-approved linking workflow is required.":"Separate staff accounts verified. Automatic identity linking is unavailable; different or unverified email addresses require manual review.";};
  updateComparison();
@@ -49,14 +52,14 @@ export function mountIntegrationReadiness(){
     const person=mapStaffRecord(key,self.id,self.data());
     if(!person.active)throw Error("Your staff record is not active");
     status.textContent="Authenticated successfully. Your own active staff record was verified. No employee records were copied or merged.";
-    identities.set(key,{uid:credential.user.uid,email:(credential.user.email||"").toLowerCase(),verifiedEmail:credential.user.emailVerified===true});
+    identities.set(key,{uid:credential.user.uid,displayName:person.displayName,email:(credential.user.email||"").toLowerCase(),verifiedEmail:credential.user.emailVerified===true});notify();
     email.value="";pass.value="";setConnected(true,person);updateComparison();
-   }catch(e){pass.value="";identities.delete(key);setConnected(false);updateComparison();status.textContent="Connection NOT verified: "+(e.code||e.message)+". Check this project's account and permissions.";const auth=sessions.get(key);if(auth){await signOut(auth).catch(()=>{});sessions.delete(key);refreshSummary()}}
+   }catch(e){pass.value="";identities.delete(key);notify();setConnected(false);updateComparison();status.textContent="Connection NOT verified: "+(e.code||e.message)+". Check this project's account and permissions.";const auth=sessions.get(key);if(auth){await signOut(auth).catch(()=>{});sessions.delete(key);refreshSummary()}}
    finally{btn.disabled=false;}
   });
   disconnect.addEventListener("click",async()=>{
    const auth=sessions.get(key);if(auth){await signOut(auth).catch(()=>{});sessions.delete(key)}
-   identities.delete(key);pass.value="";email.value="";setConnected(false);updateComparison();status.textContent="Disconnected. No data was stored in Corporate.";
+   identities.delete(key);notify();pass.value="";email.value="";setConnected(false);updateComparison();status.textContent="Disconnected. No data was stored in Corporate.";
   });
   const steps=document.createElement("p");steps.className="inline-note";steps.textContent="This verification checks only your own account and does not enable corporate synchronization.";
   panel.append(header,status,verifiedInfo,form,controls,steps);root.append(panel);
