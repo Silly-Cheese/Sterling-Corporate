@@ -12,6 +12,18 @@ async function main(){
  const {getFirestore}=await import("firebase-admin/firestore");
  const apps=[];
  try{
+  const importing=process.env.STERLING_CORPORATE_IMPORT_ENABLED==="true";
+  let corporateDb=null,importObserved=null;
+  if(importing){
+   if(!process.env.STERLING_CORPORATE_SERVICE_ACCOUNT_JSON)throw Error("Corporate import credential missing");
+   const credentials=JSON.parse(process.env.STERLING_CORPORATE_SERVICE_ACCOUNT_JSON);
+   if(credentials.project_id!=="sterling-corporate")throw Error("Corporate credential project mismatch");
+   const corporate=initializeApp({credential:cert(credentials),projectId:"sterling-corporate"},"sync-corporate");
+   apps.push(corporate);corporateDb=getFirestore(corporate);
+   ({importObserved}=await import("./import-snapshots.mjs"));
+   result.coverage="rotating-50-document-windows";
+   result.imports={created:0,updated:0,unchanged:0,conflicts:0};
+  }
   const inputs=[];
   for(const [key,id,secret,collection] of [
    ["motors","sterling-motors","STERLING_MOTORS_SERVICE_ACCOUNT_JSON","users"],
@@ -21,30 +33,29 @@ async function main(){
    if(credentials.project_id!==id)throw Error("Project mismatch for "+key);
    const app=initializeApp({credential:cert(credentials),projectId:id},"sync-"+key);apps.push(app);
    const db=getFirestore(app);
-   // Bounded, paginated source reads; only explicitly recognized staff records become observations.
-   let sourceCount=0;
-   while(true){
-    let query=db.collection(collection).orderBy("__name__").limit(50);
-    const snap=await query.get();if(snap.empty)break;
-    for(const doc of snap.docs){const record=normalize(key,doc.id,doc.data());if(record)inputs.push(record)}
-    sourceCount+=snap.size;
-    break; // Free-tier safety: at most 50 reads per subsidiary per run.
+   // Import uses a durable per-project cursor; at most 50 source reads per run.
+   const cursorRef=importing?corporateDb.collection("integrationSyncCursors").doc(key):null;
+   const priorCursor=cursorRef?(await cursorRef.get()).data()?.afterId:null;
+   const sourceQuery=db.collection(collection).orderBy("__name__").limit(50);
+   const snap=await (priorCursor?sourceQuery.startAfter(priorCursor):sourceQuery).get();
+   const batch=[];
+   for(const doc of snap.docs){const record=normalize(key,doc.id,doc.data());if(record)batch.push(record)}
+   result.sourceCounts[key]=snap.size;
+   const output=reconcile(batch);
+   inputs.push(...batch);
+   result.conflicts.push(...output.conflicts);
+   if(importing){
+    if(output.conflicts.length)throw Error("Duplicate staff identities found in "+key);
+    const counts=await importObserved(corporateDb,output.records,new Date().toISOString());
+    for(const field of Object.keys(result.imports))result.imports[field]+=counts[field]||0;
+    if(counts.conflicts)throw Error("Corporate import source collision");
+    // Cursor advances only after all observations are imported.
+    await cursorRef.set({afterId:snap.size<50?null:snap.docs.at(-1).id,updatedAt:new Date().toISOString(),projectId:id,scanned:snap.size});
    }
-   result.sourceCounts[key]=sourceCount;
+
   }
   const output=reconcile(inputs);result.observedCount=output.records.length;result.conflicts=output.conflicts;result.status=output.conflicts.length?"conflicts-found":"observed";
-  if(process.env.STERLING_CORPORATE_IMPORT_ENABLED==="true"){
-   if(!process.env.STERLING_CORPORATE_SERVICE_ACCOUNT_JSON)throw Error("Corporate import requires a Corporate credential");
-   if(output.conflicts.length)throw Error("Import blocked by identity conflicts");
-   const credentials=JSON.parse(process.env.STERLING_CORPORATE_SERVICE_ACCOUNT_JSON);
-   if(credentials.project_id!=="sterling-corporate")throw Error("Corporate credential project mismatch");
-   const corporate=initializeApp({credential:cert(credentials),projectId:"sterling-corporate"},"sync-corporate");
-   apps.push(corporate);
-   const {importObserved}=await import("./import-snapshots.mjs");
-   result.imports=await importObserved(getFirestore(corporate),output.records,new Date().toISOString());
-   result.status=result.imports.conflicts?"import-conflicts":"corporate-snapshots-updated";
-   if(result.imports.conflicts)process.exitCode=4;
-  }
+  if(importing)result.status="corporate-snapshots-updated";
   // No subsidiary writes, account writes, or local PII exports.
   log("Read-only observation complete: "+JSON.stringify({sourceCounts:result.sourceCounts,records:output.records.length,conflicts:output.conflicts.length}));
   if(output.conflicts.length)process.exitCode=3;
