@@ -65,7 +65,7 @@
 </div>
 <script type="module">
   import {initializeApp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendEmailVerification,reload,signOut} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+  import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendEmailVerification,reload,getIdTokenResult,signOut} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
   import {getFirestore,doc,getDoc,writeBatch,serverTimestamp,collection,addDoc,getDocs,query,limit,updateDoc} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
   const firebaseConfig={
     apiKey:"AIzaSyBwByEhvJhRB-x_JfUm9WWWNqATpalcsPw",
@@ -119,7 +119,7 @@
     const user=auth.currentUser;if(!user)return;
     try{
       await reload(user);
-      if(!user.emailVerified){message("Verify the email address first, then retry.");return;}
+      if(!user.emailVerified){message("Verify the email address first, then retry.");return;}\n      const refreshedToken=await getIdTokenResult(user,true);\n      if(refreshedToken.claims.email_verified!==true){message("Verified email is not yet reflected in your Firebase sign-in token. Sign out, sign back in, and retry.");return;}
       const bootstrapRef=doc(db,"system","bootstrap"),adminRef=doc(db,"corporateAdmins",user.uid);
       const existing=await getDoc(bootstrapRef);
       if(existing.exists()){message("Corporate already has an owner. Owner bootstrap cannot be repeated.");return;}
@@ -128,7 +128,7 @@
       batch.set(adminRef,{active:true,role:"owner",createdAt:serverTimestamp()});
       await batch.commit();message("Owner registration complete. Loading Corporate…");
       await refreshCorporate(user);
-    }catch(e){message("Bootstrap failed: "+(e.code||e.message));}
+    }catch(e){message("Bootstrap failed: "+(e.code||e.message)+(e.code==="permission-denied"?". Confirm the published Firestore rules are for sterling-corporate, the owner has not already been claimed, and that you are using a verified email.":""));}
   });
   let corporateUser=null,employees=[];
   const renderEmployees=()=>{
