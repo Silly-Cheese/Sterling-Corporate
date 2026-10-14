@@ -17,7 +17,7 @@
 </head>
 <body>
 <div class="shell">
-  <aside><div class="brand">STERLING <small>CORPORATE HEADQUARTERS</small></div><nav class="nav"><a class="current" href="#overview">Overview</a><a href="#subsidiaries">Subsidiaries</a><a href="#people">People & HR</a><a href="#peopleOps">Positions & Payroll</a><a href="#reconcile">Reconciliation</a><a href="#next">Implementation</a></nav></aside>
+  <aside><div class="brand">STERLING <small>CORPORATE HEADQUARTERS</small></div><nav class="nav"><a class="current" href="#overview">Overview</a><a href="#subsidiaries">Subsidiaries</a><a href="#people">People & HR</a><a href="#peopleOps">Positions & Payroll</a><a href="#phase3">Timesheets & Integrations</a><a href="#reconcile">Reconciliation</a><a href="#next">Implementation</a></nav></aside>
   <main>
     <header class="heading"><div><div class="eyebrow">STERLING GROUP / HEADQUARTERS</div><h1>Corporate Command Center</h1></div><button id="signOut" class="btn hidden" type="button">Sign out</button></header>
     <p class="lead">One headquarters for people, operations, and your Sterling subsidiaries. Sign in to manage Corporate HR and review the integration network.</p>
@@ -58,7 +58,7 @@
      </dialog>
     </section>
     <section class="section panel" id="peopleOps"></section>
-    <section class="section panel" id="reconcile">
+    <section class="section panel" id="phase3"></section><section class="section panel" id="reconcile">
       <div class="eyebrow">CORPORATE PEOPLE OPERATIONS / PREVIEW</div><h2>Employee Reconciliation Workspace</h2>
       <p class="muted">Preview authorized staff-export data from Motors and Mutual. This tool does not upload, persist, merge or grant access to accounts. All matches require verification and administrator review.</p>
       <div class="actions"><button class="btn primary" type="button" id="sampleData">Load example employees</button><button class="btn" type="button" id="clearData">Clear preview</button></div>
@@ -205,12 +205,12 @@
     }catch(e){$("hrStatus").textContent="Save failed: "+(e.code||e.message);}
   });
   const {mountPeopleOps}=await import("./people-ops.js");
-  let peopleOps=null;
+  let peopleOps=null,phase3=null;
   const refreshCorporate=async user=>{
     const grant=await getDoc(doc(db,"corporateAdmins",user.uid));
     if(!grant.exists()||grant.data()?.active!==true){message("This account is not an authorized Corporate administrator.");return;}
     corporateUser=user;$("authBox").classList.add("hidden");$("secure").classList.remove("hidden");$("signOut").classList.remove("hidden");
-    try{await loadEmployees();if(!peopleOps)peopleOps=mountPeopleOps({db,getUser:()=>auth.currentUser,showMessage:t=>{$("posNotice").textContent=t}});await peopleOps.refresh();}catch(e){$("hrStatus").textContent="People operations loading failed: "+(e.code||e.message);}
+    try{await loadEmployees();if(!peopleOps)peopleOps=mountPeopleOps({db,getUser:()=>auth.currentUser,showMessage:t=>{$("posNotice").textContent=t}});await peopleOps.refresh();if(!phase3){const mod=await import("./phase3.js");phase3=mod.mountPhase3({db,user:()=>auth.currentUser,notify:t=>{$("hrStatus").textContent=t}})}await phase3.reload();}catch(e){$("hrStatus").textContent="People operations loading failed: "+(e.code||e.message);}
   };
   const {parseStaffExport,reconciliationCandidates}=await import("./integration/reconciliation.js");
   const example=[{projectId:"sterling-motors",uid:"demo-m1",displayName:"Jordan Mitchell",email:"jordan@example.invalid",isStaff:true,status:"active",role:"Sales Manager"},
