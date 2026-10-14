@@ -60,7 +60,7 @@
      </dialog>
     </section>
     <section class="section panel workspace-section" id="peopleOps"></section>
-    <section class="section panel workspace-section" id="phase3"></section><section class="section panel workspace-section" id="integrationReadiness"><h2>Integration Manager</h2></section><section class="section panel workspace-section" id="reconcile">
+    <section class="section panel workspace-section" id="phase3"></section><section class="section panel workspace-section" id="integrationReadiness"><h2>Integration Manager</h2></section><section class="section panel workspace-section" id="reconcile"><div id="linkReview"></div>
       <div class="eyebrow">CORPORATE PEOPLE OPERATIONS / PREVIEW</div><h2>Employee Reconciliation Workspace</h2>
       <p class="muted">Preview authorized staff-export data from Motors and Mutual. This tool does not upload, persist, merge or grant access to accounts. All matches require verification and administrator review.</p>
       <div class="actions"><button class="btn primary" type="button" id="sampleData">Load example employees</button><button class="btn" type="button" id="clearData">Clear preview</button></div>
@@ -237,12 +237,17 @@
     if(panel){const notice=document.createElement("div");notice.className="notice";notice.textContent="Integration Manager unavailable: "+(error.message||"Unable to load module")+". Refresh after the latest GitHub Pages deployment.";panel.append(notice);}
     console.error("Integration Manager module error",error);
   });
+  let linkReview=null;
+  import("./integration/link-review.js").then(({mountLinkReview})=>{
+    linkReview=mountLinkReview({corporateDb:db,getCorporateUser:()=>auth.currentUser,getIdentityCandidates:()=>window.sterlingIdentityCandidates?.()||[]});
+    window.addEventListener("sterling-identities-changed",()=>linkReview?.populate());
+  }).catch(error=>console.error("Identity reconciliation UI unavailable",error));
   let peopleOps=null,phase3=null;
   const refreshCorporate=async user=>{
     const grant=await getDoc(doc(db,"corporateAdmins",user.uid));
     if(!grant.exists()||grant.data()?.active!==true){message("This account is not an authorized Corporate administrator.");return;}
     corporateUser=user;$("authBox").classList.add("hidden");$("secure").classList.remove("hidden");$("signOut").classList.remove("hidden");navigateWorkspace(location.hash.slice(1));
-    try{await loadEmployees();if(!peopleOps)peopleOps=mountPeopleOps({db,getUser:()=>auth.currentUser,showMessage:t=>{$("posNotice").textContent=t}});await peopleOps.refresh();if(!phase3){const mod=await import("./phase3.js");phase3=mod.mountPhase3({db,user:()=>auth.currentUser,notify:t=>{$("hrStatus").textContent=t}})}await phase3.reload();}catch(e){$("hrStatus").textContent="People operations loading failed: "+(e.code||e.message);}
+    try{await linkReview?.refresh();await loadEmployees();if(!peopleOps)peopleOps=mountPeopleOps({db,getUser:()=>auth.currentUser,showMessage:t=>{$("posNotice").textContent=t}});await peopleOps.refresh();if(!phase3){const mod=await import("./phase3.js");phase3=mod.mountPhase3({db,user:()=>auth.currentUser,notify:t=>{$("hrStatus").textContent=t}})}await phase3.reload();}catch(e){$("hrStatus").textContent="People operations loading failed: "+(e.code||e.message);}
   };
   const {parseStaffExport,reconciliationCandidates}=await import("./integration/reconciliation.js");
   const example=[{projectId:"sterling-motors",uid:"demo-m1",displayName:"Jordan Mitchell",email:"jordan@example.invalid",isStaff:true,status:"active",role:"Sales Manager"},
