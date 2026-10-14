@@ -132,7 +132,21 @@ service cloud.firestore {
   }
   match /subsidiaries/{id} {allow read: if isAdmin();allow write: if false;}
   match /integrationRuns/{id} {allow read: if isAdmin();allow write: if false;}
-  match /employeeIdentityLinks/{id} {allow read: if isAdmin();allow write: if false;}
+  match /employeeIdentityLinks/{id} {
+    allow read: if isAdmin();
+    allow create: if isAdmin()
+      && request.resource.data.keys().hasOnly(['employeeId','projectId','subsidiaryUid','status','requestedBy','createdAt'])
+      && request.resource.data.projectId in ['sterling-motors','sterling-mutual-insurance']
+      && request.resource.data.subsidiaryUid is string
+      && request.resource.data.subsidiaryUid.size() > 0
+      && request.resource.data.subsidiaryUid.size() <= 128
+      && id == request.resource.data.projectId + '_' + request.resource.data.subsidiaryUid
+      && request.resource.data.employeeId is string
+      && exists(/databases/$(database)/documents/corporateEmployees/$(request.resource.data.employeeId))
+      && request.resource.data.status == 'pending-review'
+      && request.resource.data.requestedBy == request.auth.uid;
+    allow update,delete: if false;
+  }
   match /{document=**} {allow read,write: if false;}
  }
 }
