@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "mode": "read-only",
+  "corporate": {
+    "projectId": "sterling-corporate",
+    "repository": "Silly-Cheese/Sterling-Corporate"
+  },
+  "subsidiaries": [
+    {
+      "id": "motors",
+      "displayName": "Sterling Motors",
+      "firebaseProjectId": "sterling-motors",
+      "repository": "Silly-Cheese/sterling-motors",
+      "verification": "not-verified",
+      "permissions": "local-only",
+      "syncMode": "disabled"
+    },
+    {
+      "id": "mutual",
+      "displayName": "Sterling Mutual Insurance",
+      "firebaseProjectId": "sterling-mutual-insurance",
+      "repository": "Silly-Cheese/Sterling-Mutual-Insurance",
+      "verification": "not-verified",
+      "permissions": "local-only",
+      "syncMode": "disabled"
+    }
+  ],
+  "policies": {
+    "accountMatching": "verified-evidence-only",
+    "automaticAccountMerge": false,
+    "clientPrivilegedWrites": false,
+    "liveSyncEnabled": false,
+    "payroll": "simulation-only"
+  }
+}
