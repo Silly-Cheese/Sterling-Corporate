@@ -1,6 +1,6 @@
 import {initializeApp,getApps} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import {getAuth,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-import {getFirestore,collection,query,limit,getDocs} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import {getAuth,signInWithEmailAndPassword,signOut,setPersistence,inMemoryPersistence} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+import {getFirestore,doc,getDoc} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 import {ADAPTERS,mapStaffRecord} from "./adapter-contract.js";
 // Firebase WEB configurations are public identifiers, not administrator secrets.
 // Every read still requires a separately authenticated subsidiary session and subsidiary Firestore rules.
@@ -11,7 +11,7 @@ const CONFIGS={
 export function mountIntegrationReadiness(){
  const root=document.getElementById("integrationReadiness");if(!root)return;
  root.replaceChildren();
- const intro=document.createElement("p");intro.className="muted";intro.textContent="Connect with your existing staff credentials in each subsidiary to run a read-only access test. This never creates a Corporate link, exports records or grants permissions.";root.append(intro);
+ const intro=document.createElement("p");intro.className="muted";intro.textContent="Verify access to your own existing subsidiary staff profile. No record is copied, and no Corporate identity link is created.";root.append(intro);
  const sessions=new Map();
  for(const [key,adapter] of Object.entries(ADAPTERS)){
   const panel=document.createElement("article");panel.className="panel";panel.style.marginTop="12px";
@@ -23,7 +23,7 @@ export function mountIntegrationReadiness(){
   const email=document.createElement("input");email.type="email";email.required=true;email.autocomplete="username";emailLabel.append(email);
   const passLabel=document.createElement("label");passLabel.className="field";passLabel.textContent="Subsidiary password";
   const pass=document.createElement("input");pass.type="password";pass.required=true;pass.autocomplete="current-password";passLabel.append(pass);
-  const btn=document.createElement("button");btn.type="submit";btn.className="btn primary";btn.textContent="Test read-only connection";
+  const btn=document.createElement("button");btn.type="submit";btn.className="btn primary";btn.textContent="Verify my staff access";
   const disconnect=document.createElement("button");disconnect.type="button";disconnect.className="btn";disconnect.textContent="Disconnect";
   form.append(emailLabel,passLabel,btn,disconnect);
   form.addEventListener("submit",async event=>{
@@ -31,13 +31,14 @@ export function mountIntegrationReadiness(){
    try{
     const appName="sterling-readonly-"+key;
     const app=getApps().find(a=>a.name===appName)||initializeApp(CONFIGS[key],appName);
-    const auth=getAuth(app);const credential=await signInWithEmailAndPassword(auth,email.value,pass.value);
+    const auth=getAuth(app);await setPersistence(auth,inMemoryPersistence);const credential=await signInWithEmailAndPassword(auth,email.value,pass.value);
     pass.value="";sessions.set(key,auth);
     const db=getFirestore(app);
-    const snap=await getDocs(query(collection(db,adapter.staffCollection),limit(25)));
-    const mapped=snap.docs.map(doc=>mapStaffRecord(key,doc.id,doc.data()));
-    const active=mapped.filter(x=>x.active).length;
-    status.textContent="Authorized session verified • Read-only staff query succeeded • "+mapped.length+" records sampled (up to 25), "+active+" active. Nothing copied to Corporate.";
+    const self=await getDoc(doc(db,adapter.staffCollection,credential.user.uid));
+    if(!self.exists())throw Error("No staff record associated with this Firebase account");
+    const person=mapStaffRecord(key,self.id,self.data());
+    if(!person.active)throw Error("Your staff record is not active");
+    status.textContent="Verified: own active staff record readable. No employee lists accessed, copied or merged.";
    }catch(e){pass.value="";status.textContent="Connection NOT verified: "+(e.code||e.message)+". Check this project's account and permissions.";const auth=sessions.get(key);if(auth){await signOut(auth).catch(()=>{});sessions.delete(key)}}
    finally{btn.disabled=false;}
   });
@@ -45,7 +46,7 @@ export function mountIntegrationReadiness(){
    const auth=sessions.get(key);if(auth){await signOut(auth).catch(()=>{});sessions.delete(key)}
    pass.value="";email.value="";status.textContent="Disconnected. No data was stored in Corporate.";
   });
-  const steps=document.createElement("p");steps.className="inline-note";steps.textContent="A successful query only verifies this signed-in staff user's read permission, not privileged Corporate access, employee matching, or automatic synchronization.";
+  const steps=document.createElement("p");steps.className="inline-note";steps.textContent="This verification checks only your own account and does not enable corporate synchronization.";
   panel.append(heading,detail,status,form,steps);root.append(panel);
  }
  const caution=document.createElement("div");caution.className="notice";caution.textContent="Separate Firebase projects keep separate login sessions. Authentication uses Firebase directly for the selected subsidiary; no passwords are saved to Firestore. Do not use another employee's credentials.";root.append(caution);
