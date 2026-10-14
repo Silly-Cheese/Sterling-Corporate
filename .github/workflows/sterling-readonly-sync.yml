@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   observe:
+    if: vars.STERLING_READONLY_SYNC_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
