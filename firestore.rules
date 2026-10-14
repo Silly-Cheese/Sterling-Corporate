@@ -1,36 +1,55 @@
 rules_version = '2';
 service cloud.firestore {
-  match /databases/{database}/documents {
-    function isCorporateAdmin() {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/corporateAdmins/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/corporateAdmins/$(request.auth.uid)).data.active == true;
-    }
-
-    // Admin records are bootstrap-managed exclusively from Firebase Console
-    // or a trusted administrative service. The browser cannot create admins.
-    match /corporateAdmins/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if false;
-    }
-
-    // Future authoritative registry and integration status: admin read-only.
-    // No direct browser writes until a separately reviewed workflow exists.
-    match /subsidiaries/{id} {
-      allow read: if isCorporateAdmin();
-      allow write: if false;
-    }
-    match /integrationRuns/{runId} {
-      allow read: if isCorporateAdmin();
-      allow write: if false;
-    }
-    match /employeeIdentityLinks/{linkId} {
-      allow read: if isCorporateAdmin();
-      allow write: if false;
-    }
-
-    match /{document=**} {
-      allow read, write: if false;
-    }
+ match /databases/{database}/documents {
+  function signedIn(){return request.auth != null;}
+  function ownerPath(){return /databases/$(database)/documents/system/bootstrap;}
+  function adminPath(){return /databases/$(database)/documents/corporateAdmins/$(request.auth.uid);}
+  function isAdmin(){return signedIn() && exists(adminPath()) && get(adminPath()).data.active == true;}
+  // One-time atomic bootstrap. First verified-email registrant becomes owner.
+  // Deploy rules and complete onboarding immediately; do not publicize site before claiming.
+  function initialClaim(uid){
+   return signedIn() && request.auth.uid == uid && request.auth.token.email_verified == true &&
+     !exists(ownerPath()) && existsAfter(ownerPath()) &&
+     getAfter(ownerPath()).data.ownerUid == uid &&
+     getAfter(ownerPath()).data.initialized == true;
   }
+  match /system/bootstrap {
+   allow get: if signedIn();
+   allow list: if false;
+   allow create: if signedIn() && request.auth.token.email_verified == true &&
+    !exists(ownerPath()) && request.resource.data.keys().hasOnly(['ownerUid','initialized','createdAt']) &&
+    request.resource.data.ownerUid == request.auth.uid && request.resource.data.initialized == true &&
+    existsAfter(adminPath()) && getAfter(adminPath()).data.active == true &&
+    getAfter(adminPath()).data.role == 'owner';
+   allow update, delete: if false;
+  }
+  match /corporateAdmins/{uid} {
+   allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+   allow list: if false;
+   allow create: if initialClaim(uid) &&
+    request.resource.data.keys().hasOnly(['active','role','createdAt']) &&
+    request.resource.data.active == true && request.resource.data.role == 'owner';
+   allow update,delete: if false;
+  }
+  match /corporateEmployees/{employeeId} {
+   allow get,list: if isAdmin();
+   allow create: if isAdmin() && request.resource.data.keys().hasOnly(['displayName','department','title','subsidiary','status','employmentType','createdAt','updatedAt','createdBy']) &&
+      request.resource.data.displayName is string && request.resource.data.displayName.size() > 1 &&
+      request.resource.data.displayName.size() <= 120 &&
+      request.resource.data.subsidiary in ['corporate','motors','mutual'] &&
+      request.resource.data.status in ['active','leave','inactive'] &&
+      request.resource.data.createdBy == request.auth.uid;
+   allow update: if isAdmin() &&
+      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName','department','title','subsidiary','status','employmentType','updatedAt']) &&
+      request.resource.data.displayName is string && request.resource.data.displayName.size() > 1 &&
+      request.resource.data.displayName.size() <= 120 &&
+      request.resource.data.subsidiary in ['corporate','motors','mutual'] &&
+      request.resource.data.status in ['active','leave','inactive'];
+   allow delete: if false;
+  }
+  match /subsidiaries/{id} {allow read: if isAdmin();allow write: if false;}
+  match /integrationRuns/{id} {allow read: if isAdmin();allow write: if false;}
+  match /employeeIdentityLinks/{id} {allow read: if isAdmin();allow write: if false;}
+  match /{document=**} {allow read,write: if false;}
+ }
 }
