@@ -12,7 +12,7 @@
     main{width:100%;max-width:1250px;padding:35px 42px;margin:auto}.eyebrow{font-size:11px;color:#86a1c2;letter-spacing:.19em;font-weight:700}.heading{display:flex;align-items:center;justify-content:space-between;gap:16px}h1{font-size:clamp(27px,4vw,39px);letter-spacing:-.035em;margin:10px 0}h2{font-size:17px;margin:0}.lead,.muted{color:#9caabd}.lead{line-height:1.6;max-width:780px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:25px 0}.panel{background:#141d29;border:1px solid #2a3545;border-radius:16px;padding:21px}.stat{font-size:29px;font-weight:750;margin:12px 0 4px}.label{font-size:12px;color:#94a4b6}.section{margin-top:30px}.list{display:grid;gap:13px;margin-top:17px}.company{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}.company h3{margin:0 0 7px;font-size:16px}.company p{margin:0;font-size:13px;color:#9caabd}.tag{border-radius:30px;padding:7px 11px;font-size:11px;border:1px solid #45526a;color:#c0ccdd;white-space:nowrap}.tag.warn{border-color:#685535;color:#eac58e}.tag.ok{border-color:#326e58;color:#9bdec3}
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:17px}.btn{padding:10px 14px;border-radius:9px;border:1px solid #45536a;background:#223248;color:#ecf2fb}.btn.primary{background:#d9e7fa;color:#0c1625;border-color:#d9e7fa;font-weight:700}.btn:disabled{opacity:.5;cursor:not-allowed}
     .auth{max-width:520px;margin:30px auto;padding:29px}.field{display:block;color:#bdc9d8;font-size:13px;margin:14px 0}.field input{display:block;width:100%;margin-top:7px;padding:12px;background:#0e1722;color:white;border:1px solid #3e4b60;border-radius:9px}.hidden{display:none}.notice{padding:13px 15px;border-radius:10px;background:#1b2836;color:#c6d4e5;margin-top:16px;font-size:13px;line-height:1.55}.foot{margin-top:35px;font-size:12px;color:#8393a8}
-    .nav a:focus-visible,.btn:focus-visible,input:focus-visible{outline:2px solid #b9d3ff;outline-offset:2px}.nav a:hover{background:#192535;color:#fff}.auth .actions{margin:22px 0 16px}.auth .btn{min-height:43px}.auth .field{margin:17px 0}.auth .notice{border-left:3px solid #8dafdb}.panel{box-shadow:0 8px 22px rgba(0,0,0,.12)}.lead{max-width:720px}.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:16px 0}.toolbar .field{flex:1;min-width:170px;margin:0}.toolbar select{width:100%;margin-top:7px;padding:12px;border-radius:9px;border:1px solid #3e4b60;background:#0e1722;color:#f2f5fa}.inline-note{font-size:12px;color:#94a4b6}.auth #authMessage{overflow-wrap:anywhere}@media(max-width:800px){.shell{display:block}aside{padding:17px 20px;border-right:0;border-bottom:1px solid #293140}.nav{margin-top:15px}.nav a{display:inline-block;padding:9px}main{padding:24px 19px}.cards{grid-template-columns:1fr}.heading{align-items:flex-start;flex-direction:column}}
+    .nav a:focus-visible,.btn:focus-visible,input:focus-visible{outline:2px solid #b9d3ff;outline-offset:2px}.nav a:hover{background:#192535;color:#fff}.auth .actions{margin:22px 0 16px}.auth .btn{min-height:43px}.auth .field{margin:17px 0}.auth .notice{border-left:3px solid #8dafdb}.panel{box-shadow:0 8px 22px rgba(0,0,0,.12)}.lead{max-width:720px}.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:16px 0}.toolbar .field{flex:1;min-width:170px;margin:0}.toolbar select{width:100%;margin-top:7px;padding:12px;border-radius:9px;border:1px solid #3e4b60;background:#0e1722;color:#f2f5fa}.inline-note{font-size:12px;color:#94a4b6}.auth #authMessage{overflow-wrap:anywhere}.editor-select{display:block;width:100%;margin-top:7px;padding:12px;border:1px solid #3e4b60;border-radius:9px;background:#0e1722;color:#fff}dialog::backdrop{background:rgba(2,7,15,.8)}@media(max-width:800px){.shell{display:block}aside{padding:17px 20px;border-right:0;border-bottom:1px solid #293140}.nav{margin-top:15px}.nav a{display:inline-block;padding:9px}main{padding:24px 19px}.cards{grid-template-columns:1fr}.heading{align-items:flex-start;flex-direction:column}}
   </style>
 </head>
 <body>
@@ -46,6 +46,16 @@
      <div class="notice" id="hrStatus" role="status">No operational accounts are created by this action.</div>
      <div class="toolbar"><label class="field">Find employees<input id="employeeSearch" type="search" placeholder="Name, title, company or department"></label><label class="field">Status<select id="employeeStatusFilter"><option value="all">All statuses</option><option value="active">Active</option><option value="leave">On leave</option><option value="inactive">Inactive</option></select></label><button class="btn" id="reloadEmployees" type="button">Refresh</button></div><p id="employeeCount" class="inline-note" role="status">Employee records will appear after sign-in.</p>
      <div id="employeeList" class="list"></div>
+     <dialog id="employeeEditor" aria-labelledby="editorHeading" style="background:#141d29;color:#edf2fa;border:1px solid #44536a;border-radius:16px;max-width:540px;width:calc(100% - 32px);padding:24px">
+       <form id="editEmployee"><h2 id="editorHeading">Edit employee profile</h2><p class="muted">Changes are made to Corporate personnel records only.</p>
+         <label class="field">Name<input name="displayName" maxlength="120" required></label>
+         <label class="field">Job title<input name="title" maxlength="100" required></label>
+         <label class="field">Department<input name="department" maxlength="100"></label>
+         <label class="field">Subsidiary<select name="subsidiary" class="editor-select"><option value="corporate">Sterling Corporate</option><option value="motors">Sterling Motors</option><option value="mutual">Sterling Mutual</option></select></label>
+         <label class="field">Employment type<select name="employmentType" class="editor-select"><option>Hourly</option><option>Salary</option><option>Contract</option></select></label>
+         <div class="actions"><button type="submit" class="btn primary">Save changes</button><button type="button" class="btn" id="cancelEdit">Cancel</button></div>
+       </form>
+     </dialog>
     </section>
     <section class="section panel" id="reconcile">
       <div class="eyebrow">CORPORATE PEOPLE OPERATIONS / PREVIEW</div><h2>Employee Reconciliation Workspace</h2>
@@ -134,7 +144,7 @@
       await refreshCorporate(user);
     }catch(e){message("Bootstrap failed: "+(e.code||e.message)+(e.code==="permission-denied"?". Confirm the published Firestore rules are for sterling-corporate, the owner has not already been claimed, and that you are using a verified email.":""));}
   });
-  let corporateUser=null,employees=[];
+  let corporateUser=null,employees=[],editingEmployeeId=null;
   const renderEmployees=()=>{
     const target=$("employeeList");target.replaceChildren();
     const term=$("employeeSearch").value.trim().toLowerCase();
@@ -153,7 +163,10 @@
       for(const status of ["active","leave","inactive"]){const option=document.createElement("option");option.value=status;option.textContent=status;select.append(option);}
       select.value=employee.status;
       select.addEventListener("change",async()=>{try{await updateDoc(doc(db,"corporateEmployees",employee.id),{status:select.value,updatedAt:serverTimestamp()});employee.status=select.value;$("hrStatus").textContent="Status saved in Corporate HR only.";}catch(e){select.value=employee.status;$("hrStatus").textContent="Update failed: "+(e.code||e.message)}});
-      card.append(select);target.append(card);
+      const controls=document.createElement("div");controls.className="actions";controls.style.marginTop="0";
+      const editButton=document.createElement("button");editButton.type="button";editButton.className="btn";editButton.textContent="Edit profile";
+      editButton.addEventListener("click",()=>{editingEmployeeId=employee.id;const form=$("editEmployee");for(const key of ["displayName","title","department","subsidiary","employmentType"]){form.elements[key].value=employee[key]||"";}$("employeeEditor").showModal();});
+      controls.append(select,editButton);card.append(controls);target.append(card);
     }
   };
   const loadEmployees=async()=>{
@@ -161,6 +174,19 @@
     employees=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.displayName.localeCompare(b.displayName));
     renderEmployees();
   };
+  $("cancelEdit").addEventListener("click",()=>{$("employeeEditor").close();editingEmployeeId=null;});
+  $("employeeEditor").addEventListener("close",()=>{editingEmployeeId=null;});
+  $("editEmployee").addEventListener("submit",async event=>{
+    event.preventDefault();
+    if(!corporateUser||!editingEmployeeId)return;
+    const form=event.currentTarget,values=Object.fromEntries(new FormData(form).entries());
+    const changes={displayName:String(values.displayName).trim(),title:String(values.title).trim(),department:String(values.department).trim(),subsidiary:values.subsidiary,employmentType:values.employmentType,updatedAt:serverTimestamp()};
+    if(changes.displayName.length<2||changes.displayName.length>120||!changes.title||changes.title.length>100)return;
+    const saveButton=form.querySelector('button[type="submit"]');saveButton.disabled=true;
+    try{await updateDoc(doc(db,"corporateEmployees",editingEmployeeId),changes);$("employeeEditor").close();$("hrStatus").textContent="Employee profile updated in Corporate.";await loadEmployees();}
+    catch(e){$("hrStatus").textContent="Profile update failed: "+(e.code||e.message);}
+    finally{saveButton.disabled=false;}
+  });
   $("employeeSearch").addEventListener("input",renderEmployees);
   $("employeeStatusFilter").addEventListener("change",renderEmployees);
   $("reloadEmployees").addEventListener("click",async()=>{try{await loadEmployees();$("hrStatus").textContent="Directory refreshed.";}catch(e){$("hrStatus").textContent="Refresh failed: "+(e.code||e.message)}});
