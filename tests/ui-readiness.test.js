@@ -10,3 +10,10 @@ test("Integration readiness module parses",()=>{
  const r=spawnSync(process.execPath,["--check",file.pathname],{encoding:"utf8"});
  assert.equal(r.status,0,r.stderr);
 });
+
+test("Connection verification never enumerates the staff collection",()=>{
+ const source=fs.readFileSync(new URL("../integration/readiness-ui.js",import.meta.url),"utf8");
+ assert.match(source,/getDoc\(doc\(db,adapter.staffCollection,credential.user.uid\)\)/);
+ assert.match(source,/inMemoryPersistence/);
+ assert.doesNotMatch(source,/getDocs\(/);
+});
