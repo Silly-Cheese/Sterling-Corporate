@@ -17,7 +17,7 @@
 </head>
 <body>
 <div class="shell">
-  <aside><div class="brand">STERLING <small>CORPORATE HEADQUARTERS</small></div><nav class="nav"><a class="current" href="#overview">Overview</a><a href="#subsidiaries">Subsidiaries</a><a href="#next">Implementation</a></nav></aside>
+  <aside><div class="brand">STERLING <small>CORPORATE HEADQUARTERS</small></div><nav class="nav"><a class="current" href="#overview">Overview</a><a href="#subsidiaries">Subsidiaries</a><a href="#reconcile">Employees</a><a href="#next">Implementation</a></nav></aside>
   <main>
     <header class="heading"><div><div class="eyebrow">STERLING GROUP / HEADQUARTERS</div><h1>Enterprise Overview</h1></div><button id="signOut" class="btn hidden" type="button">Sign out</button></header>
     <p class="lead">Corporate administration for independently operated Sterling companies. Phase 1 is a controlled foundation: linked identities, financial reporting and synchronization will only be activated after review and verification.</p>
@@ -33,7 +33,17 @@
         <article class="panel company"><div><h3>Sterling Motors</h3><p>Firebase: sterling-motors • Dealership operations</p><p><a href="https://github.com/Silly-Cheese/sterling-motors" target="_blank" rel="noopener noreferrer">Open GitHub repository ↗</a></p></div><span class="tag warn">Connection not verified</span></article>
         <article class="panel company"><div><h3>Sterling Mutual Insurance</h3><p>Firebase: sterling-mutual-insurance • Insurance operations</p><p><a href="https://github.com/Silly-Cheese/Sterling-Mutual-Insurance" target="_blank" rel="noopener noreferrer">Open GitHub repository ↗</a></p></div><span class="tag warn">Connection not verified</span></article>
       </div></section>
-      <section class="section panel" id="next"><h2>Phase 1: Implementation controls</h2><p class="muted">Existing employee records, authentication accounts, and all subsidiary data remain untouched. Cross-project access is disabled until consent, schema auditing, and permission tests are complete.</p>
+      <section class="section panel" id="reconcile">
+      <div class="eyebrow">CORPORATE PEOPLE OPERATIONS / PREVIEW</div><h2>Employee Reconciliation Workspace</h2>
+      <p class="muted">Preview authorized staff-export data from Motors and Mutual. This tool does not upload, persist, merge or grant access to accounts. All matches require verification and administrator review.</p>
+      <div class="actions"><button class="btn primary" type="button" id="sampleData">Load example employees</button><button class="btn" type="button" id="clearData">Clear preview</button></div>
+      <label class="field">Paste a staff export JSON array (max 500 entries, 2 MB). Avoid sensitive or unrelated fields.<textarea id="staffJson" rows="6" style="display:block;width:100%;margin-top:9px;padding:12px;color:#edf2fa;background:#0e1722;border:1px solid #3e4b60;border-radius:9px;resize:vertical" spellcheck="false" placeholder='[{"projectId":"sterling-motors","uid":"...","displayName":"...","isStaff":true}]'></textarea></label>
+      <button type="button" id="previewStaff" class="btn primary">Preview reconciliation</button>
+      <div class="notice" id="reconcileStatus" role="status">No data loaded. Production identity links remain disabled.</div>
+      <div class="cards" id="reconcileCounts"></div>
+      <div id="reconcileResults" class="list"></div>
+    </section>
+    <section class="section panel" id="next"><h2>Phase 1: Implementation controls</h2><p class="muted">Existing employee records, authentication accounts, and all subsidiary data remain untouched. Cross-project access is disabled until consent, schema auditing, and permission tests are complete.</p>
         <div class="actions"><a class="btn" href="https://console.firebase.google.com/project/sterling-corporate/overview" target="_blank" rel="noopener noreferrer">Corporate Firebase ↗</a><a class="btn" href="https://github.com/Silly-Cheese/Sterling-Corporate" target="_blank" rel="noopener noreferrer">Corporate source ↗</a></div></section>
     </section>
     <div class="foot" id="publicFooter">Sterling Corporate • Firebase Spark architecture • No payment processing enabled</div>
@@ -62,8 +72,30 @@
     catch(err){message("Sign-in failed. Check credentials and enable Email/Password authentication in Corporate Firebase. ("+(err?.code||"unknown")+")")}
   });
   $("signOut").addEventListener("click",()=>signOut(auth));
+  const {parseStaffExport,reconciliationCandidates}=await import("./integration/reconciliation.js");
+  const example=[{projectId:"sterling-motors",uid:"demo-m1",displayName:"Jordan Mitchell",email:"jordan@example.invalid",isStaff:true,status:"active",role:"Sales Manager"},
+    {projectId:"sterling-mutual-insurance",uid:"demo-u1",displayName:"Jordan Mitchell",email:"jordan@example.invalid",status:"active",title:"Claims Adjuster"},
+    {projectId:"sterling-motors",uid:"demo-m2",displayName:"Sarah Williams",isStaff:true,status:"active",role:"Finance Officer"}];
+  const safeText=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const clearPreview=()=>{$("staffJson").value="";$("reconcileCounts").replaceChildren();$("reconcileResults").replaceChildren();$("reconcileStatus").textContent="Preview cleared. No data saved.";};
+  $("sampleData").addEventListener("click",()=>{$("staffJson").value=JSON.stringify(example,null,2);$("previewStaff").click()});
+  $("clearData").addEventListener("click",clearPreview);
+  $("previewStaff").addEventListener("click",()=>{
+    $("reconcileCounts").replaceChildren();$("reconcileResults").replaceChildren();
+    try{
+      const records=parseStaffExport($("staffJson").value),candidates=reconciliationCandidates(records);
+      $("reconcileCounts").innerHTML='<div class="panel"><div class="label">Previewed staff records</div><div class="stat">'+records.filter(x=>x.isStaff).length+'</div></div><div class="panel"><div class="label">Possible cross-project matches</div><div class="stat">'+candidates.length+'</div></div><div class="panel"><div class="label">Approved identity links</div><div class="stat">0</div></div>';
+      $("reconcileStatus").textContent="Read-only local preview complete. No accounts were linked or modified.";
+      if(!candidates.length){$("reconcileResults").textContent="No candidate matches. This is not proof that accounts are unrelated.";return;}
+      for(const c of candidates){
+        const article=document.createElement("article");article.className="panel company";
+        article.innerHTML='<div><h3>'+safeText(c.left.name)+' ↔ '+safeText(c.right.name)+'</h3><p>'+safeText(c.left.projectId)+' / '+safeText(c.left.title)+' → '+safeText(c.right.projectId)+' / '+safeText(c.right.title)+'</p><p>Potential match: '+safeText(c.reason)+'; explicit identity verification required.</p></div><span class="tag warn">Review required</span>';
+        $("reconcileResults").append(article);
+      }
+    }catch(e){$("reconcileStatus").textContent="Preview failed: "+e.message;}
+  });
   onAuthStateChanged(auth,async user=>{
-    $("secure").classList.add("hidden");$("signOut").classList.add("hidden");$("authBox").classList.remove("hidden");
+    clearPreview();$("secure").classList.add("hidden");$("signOut").classList.add("hidden");$("authBox").classList.remove("hidden");
     if(!user){message("Sign in with a Corporate administrator account to view the registry.");return}
     try{
       const grant=await getDoc(doc(db,"corporateAdmins",user.uid));
