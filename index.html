@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0c1118">
+  <title>Sterling Corporate — Headquarters</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#e8ecf2;background:#0c1118;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer}a{color:#9cc3ff;text-decoration:none}a:hover{text-decoration:underline}
+    .shell{min-height:100vh;display:grid;grid-template-columns:244px minmax(0,1fr)}aside{padding:28px 18px;border-right:1px solid #293140;background:#0e151f}.brand{font-weight:800;letter-spacing:.11em;font-size:17px}.brand small{display:block;color:#94a2b5;letter-spacing:.13em;font-size:10px;margin-top:7px}.nav{margin-top:40px}.nav a{display:block;padding:13px;border-radius:10px;color:#b1bfd0}.nav .current{background:#1b2838;color:#fff}
+    main{width:100%;max-width:1250px;padding:35px 42px;margin:auto}.eyebrow{font-size:11px;color:#86a1c2;letter-spacing:.19em;font-weight:700}.heading{display:flex;align-items:center;justify-content:space-between;gap:16px}h1{font-size:clamp(27px,4vw,39px);letter-spacing:-.035em;margin:10px 0}h2{font-size:17px;margin:0}.lead,.muted{color:#9caabd}.lead{line-height:1.6;max-width:780px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:25px 0}.panel{background:#141d29;border:1px solid #2a3545;border-radius:16px;padding:21px}.stat{font-size:29px;font-weight:750;margin:12px 0 4px}.label{font-size:12px;color:#94a4b6}.section{margin-top:30px}.list{display:grid;gap:13px;margin-top:17px}.company{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}.company h3{margin:0 0 7px;font-size:16px}.company p{margin:0;font-size:13px;color:#9caabd}.tag{border-radius:30px;padding:7px 11px;font-size:11px;border:1px solid #45526a;color:#c0ccdd;white-space:nowrap}.tag.warn{border-color:#685535;color:#eac58e}.tag.ok{border-color:#326e58;color:#9bdec3}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:17px}.btn{padding:10px 14px;border-radius:9px;border:1px solid #45536a;background:#223248;color:#ecf2fb}.btn.primary{background:#d9e7fa;color:#0c1625;border-color:#d9e7fa;font-weight:700}.btn:disabled{opacity:.5;cursor:not-allowed}
+    .auth{max-width:450px;margin:24px 0}.field{display:block;color:#bdc9d8;font-size:13px;margin:14px 0}.field input{display:block;width:100%;margin-top:7px;padding:12px;background:#0e1722;color:white;border:1px solid #3e4b60;border-radius:9px}.hidden{display:none}.notice{padding:13px 15px;border-radius:10px;background:#1b2836;color:#c6d4e5;margin-top:16px;font-size:13px;line-height:1.55}.foot{margin-top:35px;font-size:12px;color:#8393a8}
+    @media(max-width:800px){.shell{display:block}aside{padding:17px 20px;border-right:0;border-bottom:1px solid #293140}.nav{margin-top:15px}.nav a{display:inline-block;padding:9px}main{padding:24px 19px}.cards{grid-template-columns:1fr}.heading{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside><div class="brand">STERLING <small>CORPORATE HEADQUARTERS</small></div><nav class="nav"><a class="current" href="#overview">Overview</a><a href="#subsidiaries">Subsidiaries</a><a href="#next">Implementation</a></nav></aside>
+  <main>
+    <header class="heading"><div><div class="eyebrow">STERLING GROUP / HEADQUARTERS</div><h1>Enterprise Overview</h1></div><button id="signOut" class="btn hidden" type="button">Sign out</button></header>
+    <p class="lead">Corporate administration for independently operated Sterling companies. Phase 1 is a controlled foundation: linked identities, financial reporting and synchronization will only be activated after review and verification.</p>
+    <section class="panel auth" id="authBox"><h2>Corporate administrator sign-in</h2><p class="muted">Sign in using a Sterling Corporate Firebase Authentication account. Existing Motors and Mutual credentials are not automatically corporate accounts.</p>
+      <form id="loginForm"><label class="field">Email<input name="email" type="email" autocomplete="username" required></label><label class="field">Password<input name="password" type="password" autocomplete="current-password" required></label><button class="btn primary" type="submit">Sign in</button></form>
+      <div class="notice" id="authMessage" role="status">Sign-in requires Authentication to be enabled in the new Firebase project.</div>
+    </section>
+    <section id="secure" class="hidden">
+      <div class="cards"><div class="panel"><div class="label">Configured subsidiaries</div><div class="stat">2</div><div class="label">Not yet verified live</div></div>
+        <div class="panel"><div class="label">Verified integrations</div><div class="stat">0</div><div class="label">No live connections claimed</div></div>
+        <div class="panel"><div class="label">Payroll mode</div><div class="stat">RP</div><div class="label">Simulated • Not active</div></div></div>
+      <section class="section" id="subsidiaries"><h2>Subsidiary Registry</h2><div class="list">
+        <article class="panel company"><div><h3>Sterling Motors</h3><p>Firebase: sterling-motors • Dealership operations</p><p><a href="https://github.com/Silly-Cheese/sterling-motors" target="_blank" rel="noopener noreferrer">Open GitHub repository ↗</a></p></div><span class="tag warn">Connection not verified</span></article>
+        <article class="panel company"><div><h3>Sterling Mutual Insurance</h3><p>Firebase: sterling-mutual-insurance • Insurance operations</p><p><a href="https://github.com/Silly-Cheese/Sterling-Mutual-Insurance" target="_blank" rel="noopener noreferrer">Open GitHub repository ↗</a></p></div><span class="tag warn">Connection not verified</span></article>
+      </div></section>
+      <section class="section panel" id="next"><h2>Phase 1: Implementation controls</h2><p class="muted">Existing employee records, authentication accounts, and all subsidiary data remain untouched. Cross-project access is disabled until consent, schema auditing, and permission tests are complete.</p>
+        <div class="actions"><a class="btn" href="https://console.firebase.google.com/project/sterling-corporate/overview" target="_blank" rel="noopener noreferrer">Corporate Firebase ↗</a><a class="btn" href="https://github.com/Silly-Cheese/Sterling-Corporate" target="_blank" rel="noopener noreferrer">Corporate source ↗</a></div></section>
+    </section>
+    <div class="foot" id="publicFooter">Sterling Corporate • Firebase Spark architecture • No payment processing enabled</div>
+  </main>
+</div>
+<script type="module">
+  import {initializeApp} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+  import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+  import {getFirestore,doc,getDoc} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+  const firebaseConfig={
+    apiKey:"AIzaSyBwByEhvJhRB-x_JfUm9WWWNqATpalcsPw",
+    authDomain:"sterling-corporate.firebaseapp.com",
+    projectId:"sterling-corporate",
+    storageBucket:"sterling-corporate.firebasestorage.app",
+    messagingSenderId:"218145815397",
+    appId:"1:218145815397:web:ba9865ff93ca84f808bf8c"
+  };
+  const app=initializeApp(firebaseConfig);
+  const auth=getAuth(app);
+  const db=getFirestore(app);
+  const $=id=>document.getElementById(id);
+  const message=text=>$("authMessage").textContent=text;
+  $("loginForm").addEventListener("submit",async e=>{
+    e.preventDefault();const form=e.currentTarget;
+    try{message("Signing in…");await signInWithEmailAndPassword(auth,form.elements.email.value,form.elements.password.value);form.reset()}
+    catch(err){message("Sign-in failed. Check credentials and enable Email/Password authentication in Corporate Firebase. ("+(err?.code||"unknown")+")")}
+  });
+  $("signOut").addEventListener("click",()=>signOut(auth));
+  onAuthStateChanged(auth,async user=>{
+    $("secure").classList.add("hidden");$("signOut").classList.add("hidden");$("authBox").classList.remove("hidden");
+    if(!user){message("Sign in with a Corporate administrator account to view the registry.");return}
+    try{
+      const grant=await getDoc(doc(db,"corporateAdmins",user.uid));
+      if(!grant.exists()||grant.data()?.active!==true){message("Signed in, but this account has not been assigned Corporate administrator access. Set corporateAdmins/"+user.uid+" with active=true in the Firebase Console.");return}
+      $("authBox").classList.add("hidden");$("secure").classList.remove("hidden");$("signOut").classList.remove("hidden");
+    }catch(err){message("Administrator verification failed. Deploy restrictive Corporate Firestore rules and verify Firestore is enabled. ("+(err?.code||"unknown")+")")}
+  });
+</script>
+</body>
+</html>
