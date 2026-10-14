@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "sync:dry-run": "node scripts/sync-readonly.mjs --dry-run",
+    "sync:read-only": "node scripts/sync-readonly.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.4.0"
+  }
+}
