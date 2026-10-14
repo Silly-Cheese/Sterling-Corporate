@@ -130,6 +130,12 @@ service cloud.firestore {
        (resource.data.status == 'rejected' && request.resource.data.status == 'draft'));
    allow delete: if false;
   }
+  // Materialized subsidiary snapshots: Corporate admins can read; browser writes prohibited.
+  // Only explicitly scoped server credentials may import these observations.
+  match /subsidiaryStaffSnapshots/{id} {
+    allow get, list: if isAdmin();
+    allow create, update, delete: if false;
+  }
   match /subsidiaries/{id} {allow read: if isAdmin();allow write: if false;}
   match /integrationRuns/{id} {allow read: if isAdmin();allow write: if false;}
   match /employeeIdentityLinks/{id} {
