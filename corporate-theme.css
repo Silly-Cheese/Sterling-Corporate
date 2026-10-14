@@ -80,3 +80,31 @@ dialog::backdrop{background:rgba(0,0,0,.78)}
 #integrationReadiness .integration-card.is-verified .actions{margin:14px 0 0}
 #integrationReadiness .integration-card.is-verified .inline-note{display:block;margin:8px 0 0;line-height:1.55}
 #integrationReadiness .integration-card.is-verified .company h3{color:#f5f0e4}
+
+/* Sterling Corporate refinement: more readable enterprise density and hierarchy */
+.shell>aside{padding:28px 18px 20px;box-shadow:8px 0 34px rgba(0,0,0,.08)}
+.nav{gap:6px}.nav a{padding:12px 14px;border-radius:11px}
+.nav a.current{box-shadow:inset 3px 0 var(--cream2)}
+.heading{min-height:82px}.heading h1{font-size:clamp(24px,2.4vw,35px)}
+#secure{margin-top:30px}.section.panel{background:linear-gradient(160deg,#151a1e,#101418);border-color:#30363a}
+#secure .section>.eyebrow{margin-bottom:9px}
+.cards .panel{position:relative;overflow:hidden;border-color:#33342f;background:linear-gradient(140deg,#1a1e20,#111516)}
+.cards .panel:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--cream2)}
+.cards .stat{font-weight:700;font-size:32px}
+.btn{gap:7px;letter-spacing:.005em}
+.btn.primary{box-shadow:0 2px 12px rgba(185,158,108,.1)}
+#integrationReadiness{overflow:visible}
+#integrationReadiness .integration-card{padding:24px!important;border-radius:15px}
+#integrationReadiness .integration-card .company{align-items:flex-start}
+#integrationReadiness .integration-card h3{font-size:17px;margin:0 0 4px}
+#integrationReadiness .integration-card .notice{line-height:1.6}
+#integrationReadiness .integration-card.is-verified{border-color:#365342!important}
+#integrationReadiness .integration-card.is-verified form{display:none!important}
+#integrationReadiness .integration-card .toolbar .field{flex:1 1 220px}
+#integrationReadiness #integrationSummary{font-size:13px;font-weight:600;border-color:#514730;background:#211f1a;color:#e4d6bb}
+#integrationReadiness .notice{overflow-wrap:anywhere}
+#linkReview .toolbar{align-items:end}
+#linkReview .toolbar .field{flex:1 1 240px}
+#linkReview .toolbar .editor-select{min-height:42px}
+@media(max-width:900px){.shell>aside{box-shadow:none}.nav a.current{box-shadow:inset 0 -3px var(--cream2)}}
+@media(max-width:580px){#integrationReadiness .integration-card{padding:17px!important}.heading{min-height:auto}.cards .stat{font-size:27px}}
