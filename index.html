@@ -15,7 +15,7 @@
     .auth{max-width:520px;margin:30px auto;padding:29px}.field{display:block;color:#bdc9d8;font-size:13px;margin:14px 0}.field input{display:block;width:100%;margin-top:7px;padding:12px;background:#0e1722;color:white;border:1px solid #3e4b60;border-radius:9px}.hidden{display:none}.notice{padding:13px 15px;border-radius:10px;background:#1b2836;color:#c6d4e5;margin-top:16px;font-size:13px;line-height:1.55}.foot{margin-top:35px;font-size:12px;color:#8393a8}
     .nav a:focus-visible,.btn:focus-visible,input:focus-visible{outline:2px solid #b9d3ff;outline-offset:2px}.nav a:hover{background:#192535;color:#fff}.auth .actions{margin:22px 0 16px}.auth .btn{min-height:43px}.auth .field{margin:17px 0}.auth .notice{border-left:3px solid #8dafdb}.panel{box-shadow:0 8px 22px rgba(0,0,0,.12)}.lead{max-width:720px}.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:16px 0}.toolbar .field{flex:1;min-width:170px;margin:0}.toolbar select{width:100%;margin-top:7px;padding:12px;border-radius:9px;border:1px solid #3e4b60;background:#0e1722;color:#f2f5fa}.inline-note{font-size:12px;color:#94a4b6}.auth #authMessage{overflow-wrap:anywhere}.editor-select{display:block;width:100%;margin-top:7px;padding:12px;border:1px solid #3e4b60;border-radius:9px;background:#0e1722;color:#fff}dialog::backdrop{background:rgba(2,7,15,.8)}@media(max-width:800px){.shell{display:block}aside{padding:17px 20px;border-right:0;border-bottom:1px solid #293140}.nav{margin-top:15px}.nav a{display:inline-block;padding:9px}main{padding:24px 19px}.cards{grid-template-columns:1fr}.heading{align-items:flex-start;flex-direction:column}}
   </style>
-  <link rel="stylesheet" href="./corporate-theme.css?v=4">
+  <link rel="stylesheet" href="./corporate-theme.css?v=5">
 </head>
 <body>
 <div class="shell">
@@ -38,6 +38,7 @@
       <section class="section panel workspace-section" id="people">
      <div class="eyebrow">PHASE 2 / CORPORATE HR</div><h2>Employee Directory</h2>
      <p class="muted">This directory contains Corporate HR profiles only. Employees already in Motors or Mutual will not appear until an authorized reconciliation/import is completed. Successful subsidiary sign-in is not an employee import.</p>
+     <div id="importedEmployees"></div>
      <form id="addEmployee"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
        <label class="field">Full name<input name="displayName" maxlength="120" required></label>
        <label class="field">Job title<input name="title" maxlength="100" required></label>
@@ -244,6 +245,8 @@
     if(panel){const notice=document.createElement("div");notice.className="notice";notice.textContent="Integration Manager unavailable: "+(error.message||"Unable to load module")+". Refresh after the latest GitHub Pages deployment.";panel.append(notice);}
     console.error("Integration Manager module error",error);
   });
+  let importedDirectory=null;
+  import("./integration/imported-directory.js?v=1").then(({mountSubsidiaryDirectory})=>{importedDirectory=mountSubsidiaryDirectory({db});if(auth.currentUser&&corporateUser)void importedDirectory?.refresh();}).catch(error=>console.error("Imported directory unavailable",error));
   let linkReview=null;
   import("./integration/link-review.js").then(({mountLinkReview})=>{
     linkReview=mountLinkReview({corporateDb:db,getCorporateUser:()=>auth.currentUser,getIdentityCandidates:()=>window.sterlingIdentityCandidates?.()||[]});
@@ -254,7 +257,7 @@
     const grant=await getDoc(doc(db,"corporateAdmins",user.uid));
     if(!grant.exists()||grant.data()?.active!==true){message("This account is not an authorized Corporate administrator.");return;}
     corporateUser=user;$("authBox").classList.add("hidden");$("secure").classList.remove("hidden");$("signOut").classList.remove("hidden");navigateWorkspace(location.hash.slice(1));
-    try{await linkReview?.refresh();await loadEmployees();if(!peopleOps)peopleOps=mountPeopleOps({db,getUser:()=>auth.currentUser,showMessage:t=>{$("posNotice").textContent=t}});await peopleOps.refresh();if(!phase3){const mod=await import("./phase3.js");phase3=mod.mountPhase3({db,user:()=>auth.currentUser,notify:t=>{$("hrStatus").textContent=t}})}await phase3.reload();}catch(e){$("hrStatus").textContent="People operations loading failed: "+(e.code||e.message);}
+    try{await linkReview?.refresh();await importedDirectory?.refresh();await loadEmployees();if(!peopleOps)peopleOps=mountPeopleOps({db,getUser:()=>auth.currentUser,showMessage:t=>{$("posNotice").textContent=t}});await peopleOps.refresh();if(!phase3){const mod=await import("./phase3.js");phase3=mod.mountPhase3({db,user:()=>auth.currentUser,notify:t=>{$("hrStatus").textContent=t}})}await phase3.reload();}catch(e){$("hrStatus").textContent="People operations loading failed: "+(e.code||e.message);}
   };
   const {parseStaffExport,reconciliationCandidates}=await import("./integration/reconciliation.js");
   const example=[{projectId:"sterling-motors",uid:"demo-m1",displayName:"Jordan Mitchell",email:"jordan@example.invalid",isStaff:true,status:"active",role:"Sales Manager"},
