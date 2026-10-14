@@ -21,8 +21,8 @@
   <main>
     <header class="heading"><div><div class="eyebrow">STERLING GROUP / HEADQUARTERS</div><h1>Enterprise Overview</h1></div><button id="signOut" class="btn hidden" type="button">Sign out</button></header>
     <p class="lead">Corporate administration for independently operated Sterling companies. Phase 1 is a controlled foundation: linked identities, financial reporting and synchronization will only be activated after review and verification.</p>
-    <section class="panel auth" id="authBox"><h2>Corporate administrator sign-in</h2><p class="muted">Sign in using a Sterling Corporate Firebase Authentication account. Existing Motors and Mutual credentials are not automatically corporate accounts.</p>
-      <div class="actions"><button class="btn" id="modeSignIn" type="button">Sign in</button><button class="btn" id="modeRegister" type="button">Create first owner</button></div><form id="loginForm"><label class="field">Email<input name="email" type="email" autocomplete="username" required></label><label class="field">Password<input name="password" type="password" autocomplete="current-password" required></label><button class="btn primary" id="authSubmit" type="submit">Sign in</button></form><div class="actions"><button class="btn hidden" id="verifyEmail" type="button">Send verification email</button><button class="btn hidden" id="claimOwner" type="button">Claim owner access</button></div>
+    <section class="panel auth" id="authBox"><h2>Corporate account access</h2><p class="muted">Sign in using a Sterling Corporate Firebase Authentication account. Existing Motors and Mutual credentials are not automatically corporate accounts.</p>
+      <div class="actions"><button class="btn" id="modeSignIn" type="button">Sign in</button><button class="btn" id="modeRegister" type="button">Register account</button></div><form id="loginForm"><label class="field">Email<input name="email" type="email" autocomplete="username" required></label><label class="field">Password<input name="password" type="password" autocomplete="current-password" required></label><button class="btn primary" id="authSubmit" type="submit">Sign in</button></form><div class="actions"><button class="btn hidden" id="verifyEmail" type="button">Send verification email</button><button class="btn hidden" id="claimOwner" type="button">Claim owner access</button></div>
       <div class="notice" id="authMessage" role="status">Sign-in requires Authentication to be enabled in the new Firebase project.</div>
     </section>
     <section id="secure" class="hidden">
@@ -94,6 +94,26 @@
     }catch(err){message("Authentication failed: "+(err?.code||"unknown"));}
   });
   $("signOut").addEventListener("click",()=>signOut(auth));
+  const showBootstrapHelp=async user=>{
+    if(!user)return;
+    try{
+      await reload(user);
+      const bootstrap=await getDoc(doc(db,"system","bootstrap"));
+      if(bootstrap.exists()){
+        $("claimOwner").classList.add("hidden");
+        message("You are signed in, but your account is not a Corporate administrator. The initial owner must grant access through a future administrator workflow.");
+      }else if(user.emailVerified){
+        $("claimOwner").classList.remove("hidden");$("verifyEmail").classList.add("hidden");
+        message("Email verified. Initial Corporate setup is available: select Claim owner access. If this fails with permission-denied, deploy the updated Corporate firestore.rules first.");
+      }else{
+        $("claimOwner").classList.add("hidden");$("verifyEmail").classList.remove("hidden");
+        message("Your account is signed in. Verify your email, then click Claim owner access. If you already verified, refresh this page and try again.");
+      }
+    }catch(e){
+      $("claimOwner").classList.add("hidden");
+      message("Unable to check owner bootstrap ("+(e.code||e.message)+"). Deploy the Phase 2 Corporate Firestore rules in Firebase Console first.");
+    }
+  };
   $("verifyEmail").addEventListener("click",async()=>{try{await sendEmailVerification(auth.currentUser);message("Verification email sent. Check inbox and spam folder.");}catch(e){message(e.code||e.message)}});
   $("claimOwner").addEventListener("click",async()=>{
     const user=auth.currentUser;if(!user)return;
@@ -179,9 +199,9 @@
   });
   onAuthStateChanged(auth,async user=>{
     corporateUser=null;clearPreview();$("secure").classList.add("hidden");$("signOut").classList.add("hidden");$("authBox").classList.remove("hidden");
-    $("verifyEmail").classList.toggle("hidden",!user);$("claimOwner").classList.toggle("hidden",!user);
+    $("verifyEmail").classList.add("hidden");$("claimOwner").classList.add("hidden");
     if(!user){message("Sign in, or create the first verified owner account.");return;}
-    try{await refreshCorporate(user);}catch(e){message("Corporate authorization failed: "+(e.code||e.message));}
+    try{const grant=await getDoc(doc(db,"corporateAdmins",user.uid));if(grant.exists()&&grant.data()?.active===true){await refreshCorporate(user);$("claimOwner").classList.add("hidden");$("verifyEmail").classList.add("hidden");}else{await showBootstrapHelp(user);}}catch(e){message("Corporate authorization failed: "+(e.code||e.message));}
   });
 </script>
 </body>
