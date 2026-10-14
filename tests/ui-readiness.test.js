@@ -17,3 +17,11 @@ test("Connection verification never enumerates the staff collection",()=>{
  assert.match(source,/inMemoryPersistence/);
  assert.doesNotMatch(source,/getDocs\(/);
 });
+
+test("Subsidiary sessions persist while staff permissions are rechecked on refresh",()=>{
+ const source=fs.readFileSync(new URL("../integration/readiness-ui.js",import.meta.url),"utf8");
+ assert.match(source,/browserLocalPersistence/);
+ assert.match(source,/onAuthStateChanged\(auth/);
+ assert.match(source,/getDoc\(doc\(getFirestore\(app\),adapter.staffCollection,user.uid\)\)/);
+ assert.doesNotMatch(source,/inMemoryPersistence/);
+});
