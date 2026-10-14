@@ -1,5 +1,5 @@
 import {initializeApp,getApps} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import {getAuth,signInWithEmailAndPassword,signOut,setPersistence,inMemoryPersistence} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+import {getAuth,signInWithEmailAndPassword,signOut,setPersistence,browserLocalPersistence,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 import {getFirestore,doc,getDoc} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 import {ADAPTERS,mapStaffRecord} from "./adapter-contract.js";
 // Firebase WEB configurations are public identifiers, not administrator secrets.
@@ -20,7 +20,7 @@ export function mountIntegrationReadiness(){
  const comparison=document.createElement("div");comparison.className="notice";comparison.setAttribute("role","status");root.append(comparison);
  const updateComparison=()=>{const a=identities.get("motors"),b=identities.get("mutual");if(!a||!b){comparison.textContent="Identity review: Verify your existing accounts in both subsidiaries to compare their identity evidence. Nothing will be linked automatically.";return;}const matched=a.verifiedEmail&&b.verifiedEmail&&a.email===b.email;comparison.textContent=matched?"Identity review candidate: Both sessions have the same verified email address. These are still distinct Firebase UIDs; a Corporate-approved linking workflow is required.":"Separate staff accounts verified. Automatic identity linking is unavailable; different or unverified email addresses require manual review.";};
  updateComparison();
- const refreshSummary=()=>{const el=root.querySelector("#integrationSummary");if(el)el.textContent=`${sessions.size} of ${Object.keys(ADAPTERS).length} staff sessions verified • Automatic synchronization disabled`;};
+ const refreshSummary=()=>{const el=root.querySelector("#integrationSummary");if(el)el.textContent=`${identities.size} of ${Object.keys(ADAPTERS).length} subsidiary staff accounts verified • Sessions can resume after refresh • Background sync managed separately`;};
  const summary=document.createElement("div");summary.id="integrationSummary";summary.className="notice";root.append(summary);refreshSummary();
  for(const [key,adapter] of Object.entries(ADAPTERS)){
   const panel=document.createElement("article");panel.className="panel integration-card";panel.style.marginTop="12px";panel.style.padding="20px";
@@ -39,13 +39,37 @@ export function mountIntegrationReadiness(){
   const controls=document.createElement("div");controls.className="actions";controls.append(disconnect);disconnect.hidden=true;
   const verifiedInfo=document.createElement("div");verifiedInfo.className="inline-note";verifiedInfo.hidden=true;
   const setConnected=(active,person)=>{panel.classList.toggle("is-verified",active);form.hidden=active;form.style.display=active?"none":"";disconnect.hidden=!active;verifiedInfo.hidden=!active;pill.className=active?"tag ok":"tag warn";pill.textContent=active?"Staff verified":"Not verified";if(active&&person)verifiedInfo.textContent=`${person.displayName||"Staff member"} • ${person.jobTitle||"Staff"} • Active subsidiary identity verified`;refreshSummary();};
+  const appName="sterling-readonly-"+key;
+  const app=getApps().find(a=>a.name===appName)||initializeApp(CONFIGS[key],appName);
+  const auth=getAuth(app);sessions.set(key,auth);
+  let sequence=0;
+  async function validate(user){
+   const current=++sequence;
+   if(!user){identities.delete(key);notify();setConnected(false);updateComparison();status.textContent="Not connected. Sign in to verify your staff account.";return}
+   status.textContent="Restoring saved session and checking current staff authorization…";
+   try{
+    const self=await getDoc(doc(getFirestore(app),adapter.staffCollection,user.uid));
+    if(current!==sequence)return;
+    if(!self.exists())throw Error("This account has no staff record");
+    const person=mapStaffRecord(key,self.id,self.data());
+    if(!person.active)throw Error("Staff access is no longer active");
+    identities.set(key,{uid:user.uid,displayName:person.displayName,email:(user.email||"").toLowerCase(),verifiedEmail:user.emailVerified===true});
+    setConnected(true,person);updateComparison();notify();
+    status.textContent="Active staff access verified • Session restored securely";
+   }catch(error){
+    if(current!==sequence)return;
+    identities.delete(key);setConnected(false);updateComparison();notify();
+    status.textContent="Session could not be verified: "+(error.code||error.message)+". Sign in again to retry.";
+    // A transient network failure should not erase a valid saved login.
+    if(error.code==="permission-denied"||error.code==="auth/user-disabled")await signOut(auth).catch(()=>{});
+   }
+  }
+  onAuthStateChanged(auth,user=>{void validate(user)});
   form.addEventListener("submit",async event=>{
    event.preventDefault();btn.disabled=true;status.textContent="Authenticating and testing existing staff permissions…";
    try{
-    const appName="sterling-readonly-"+key;
-    const app=getApps().find(a=>a.name===appName)||initializeApp(CONFIGS[key],appName);
-    const auth=getAuth(app);await setPersistence(auth,inMemoryPersistence);const credential=await signInWithEmailAndPassword(auth,email.value,pass.value);
-    pass.value="";sessions.set(key,auth);
+    await setPersistence(auth,browserLocalPersistence);const credential=await signInWithEmailAndPassword(auth,email.value,pass.value);
+    pass.value="";
     const db=getFirestore(app);
     const self=await getDoc(doc(db,adapter.staffCollection,credential.user.uid));
     if(!self.exists())throw Error("No staff record associated with this Firebase account");
@@ -54,14 +78,14 @@ export function mountIntegrationReadiness(){
     status.textContent="Authenticated successfully. Your own active staff record was verified. No employee records were copied or merged.";
     identities.set(key,{uid:credential.user.uid,displayName:person.displayName,email:(credential.user.email||"").toLowerCase(),verifiedEmail:credential.user.emailVerified===true});notify();
     email.value="";pass.value="";setConnected(true,person);updateComparison();
-   }catch(e){pass.value="";identities.delete(key);notify();setConnected(false);updateComparison();status.textContent="Connection NOT verified: "+(e.code||e.message)+". Check this project's account and permissions.";const auth=sessions.get(key);if(auth){await signOut(auth).catch(()=>{});sessions.delete(key);refreshSummary()}}
+   }catch(e){pass.value="";identities.delete(key);notify();setConnected(false);updateComparison();status.textContent="Connection NOT verified: "+(e.code||e.message)+". Check this project's account and permissions.";const auth=sessions.get(key);if(auth){await signOut(auth).catch(()=>{});refreshSummary()}}
    finally{btn.disabled=false;}
   });
   disconnect.addEventListener("click",async()=>{
-   const auth=sessions.get(key);if(auth){await signOut(auth).catch(()=>{});sessions.delete(key)}
+   const auth=sessions.get(key);if(auth){await signOut(auth).catch(()=>{})}
    identities.delete(key);notify();pass.value="";email.value="";setConnected(false);updateComparison();status.textContent="Disconnected. No data was stored in Corporate.";
   });
-  const steps=document.createElement("p");steps.className="inline-note";steps.textContent="Staff identity verified locally. Corporate synchronization and permissions remain separate.";
+  const steps=document.createElement("p");steps.className="inline-note";steps.textContent="Your browser remembers this subsidiary session. Each refresh rechecks active staff permissions. Disconnect signs out of this subsidiary.";
   panel.append(header,status,verifiedInfo,form,controls,steps);root.append(panel);
  }
  const caution=document.createElement("div");caution.className="notice";caution.textContent="Separate Firebase projects keep separate login sessions. Authentication uses Firebase directly for the selected subsidiary; no passwords are saved to Firestore. Do not use another employee's credentials.";root.append(caution);
