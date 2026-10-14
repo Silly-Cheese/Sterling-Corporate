@@ -70,3 +70,13 @@ dialog::backdrop{background:rgba(0,0,0,.78)}
 :where(.btn,a,input,select,textarea,button):focus-visible{outline:2px solid var(--cream2);outline-offset:3px}
 @media(max-width:900px){.shell{display:block}.shell>aside{position:relative;height:auto;padding:16px 18px 12px}.brand{padding-bottom:4px;min-height:50px}.nav{flex-direction:row;gap:6px;overflow-x:auto;margin-top:14px;padding-bottom:8px;scrollbar-width:thin}.nav a{white-space:nowrap;min-height:38px;flex:none}.nav a[href="#subsidiaries"],.nav a[href="#people"],.nav a[href="#integrationReadiness"]{margin-top:0}.heading{position:relative}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.heading{padding:16px 18px;flex-wrap:wrap}.heading h1{font-size:25px}main>.lead{margin:19px 18px 0}#secure{margin:20px 18px}.cards{grid-template-columns:1fr}.auth{width:calc(100% - 36px);margin:24px 18px;padding:20px}.section.panel{padding:18px}.toolbar .field{flex:1 1 100%;min-width:0}.company{align-items:flex-start}.panel{padding:16px}.foot{margin:26px 18px}}
+
+/* Authenticated integration state: never show credential fields after verification. */
+#integrationReadiness .integration-card.is-verified form,
+#integrationReadiness .integration-card form[hidden],
+#integrationReadiness .integration-card [hidden]{display:none!important}
+#integrationReadiness .integration-card.is-verified{border-color:#365342;background:linear-gradient(135deg,#141d19,#12171a)}
+#integrationReadiness .integration-card.is-verified .notice{margin:14px 0 10px;padding:12px 15px;background:#15261d;border:1px solid #325743;color:#b6ddc1}
+#integrationReadiness .integration-card.is-verified .actions{margin:14px 0 0}
+#integrationReadiness .integration-card.is-verified .inline-note{display:block;margin:8px 0 0;line-height:1.55}
+#integrationReadiness .integration-card.is-verified .company h3{color:#f5f0e4}
