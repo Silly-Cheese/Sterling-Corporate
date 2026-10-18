@@ -1,0 +1,25 @@
+name: Sterling Corporate Quality Gate
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate integration and reconciliation code
+        run: |
+          for file in integration/*.js scripts/*.mjs tests/*.test.js; do
+            node --check "$file"
+          done
+          node --test tests/*.test.js
+      - name: Verify sync cannot read project data during dry-run
+        run: node scripts/sync-readonly.mjs --dry-run
