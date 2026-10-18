@@ -4,7 +4,7 @@ Phase 1 foundation for Sterling Group, designed for **Firebase Spark**, **GitHub
 
 ## Scope
 - Sterling Corporate Firebase project: `sterling-corporate`
-- Existing subsidiaries: `sterling-motors` and `sterling-mutual-insurance`
+- Registered subsidiaries: `sterling-motors`, `sterling-mutual-insurance`, and `sterling-payroll-5d200` (Payroll Services).
 - Preserve all existing identities and records; **no migration or writes** to subsidiary projects in Phase 1.
 - The dashboard distinguishes *configured* from *verified connected*. Both subsidiaries start **not verified**.
 
@@ -45,3 +45,10 @@ Phase 1 foundation for Sterling Group, designed for **Firebase Spark**, **GitHub
 ## Known repos
 - https://github.com/Silly-Cheese/sterling-motors
 - https://github.com/Silly-Cheese/Sterling-Mutual-Insurance
+- https://github.com/Silly-Cheese/Sterling-Payroll
+
+## 2026 Sterling suite updates
+
+Corporate HQ now displays all three subsidiaries (Motors, Mutual and Payroll) and permits **manual, read-only** Payroll identities to appear as reconciliation candidates. Matches based on shared names/emails remain **review-required**, not account merges or permission grants. The scheduled read-only reconciliation script still uses only Motors and Mutual; Payroll credentials and an explicit safe source mapping must be configured before any live Payroll connection can be claimed.
+
+All four Sterling repositories now have or are adding source-level validation. Corporate itself has a GitHub quality workflow that runs the existing reconciliation tests and an offline dry-run of the sync process. It never reads or writes production Firebase data during that dry-run.
