@@ -9,9 +9,16 @@ test("blocks duplicate uid per project",()=>assert.throws(()=>parseStaffExport(J
 test("blocks unknown projects and non staff",()=>{assert.throws(()=>normalizeEmployee("foreign","x",{}));assert.equal(reconciliationCandidates([normalizeEmployee(m.projectId,m.uid,{...m,isStaff:false}),normalizeEmployee(i.projectId,i.uid,i)]).length,0)});
 
 test("Payroll identities are supported as separate, review-only candidates",()=>{
- const pay={projectId:"sterling-payroll-5d200",uid:"c3",displayName:"Alex Smith",email:"alex@example.com",status:"active",role:"payroll_specialist"};
+ const pay={projectId:"sterling-payroll-5d200",uid:"c3",displayName:"Alex Smith",email:"alex@example.com",status:"active",active:true,role:"payroll_operator"};
  const records=parseStaffExport(JSON.stringify([m,i,pay]));
  assert.equal(records.length,3);
  assert.equal(reconciliationCandidates(records).length,3);
  assert.ok(reconciliationCandidates(records).every(x=>x.status==="review-required"));
+});
+
+test("Payroll company clients are not inferred to be Sterling staff",()=>{
+ const client={projectId:"sterling-payroll-5d200",uid:"customer123",displayName:"Alex Smith",email:"alex@example.com",role:"client_admin",status:"active"};
+ const records=parseStaffExport(JSON.stringify([m,client]));
+ assert.equal(records[1].isStaff,false);
+ assert.deepEqual(reconciliationCandidates(records),[]);
 });
