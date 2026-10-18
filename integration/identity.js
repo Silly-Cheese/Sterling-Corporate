@@ -1,5 +1,5 @@
 // Pure identity-linking primitives. No Firebase calls, side effects or account merges.
-export const ALLOWED_PROJECTS=Object.freeze(["sterling-motors","sterling-mutual-insurance"]);
+export const ALLOWED_PROJECTS=Object.freeze(["sterling-motors","sterling-mutual-insurance","sterling-payroll-5d200"]);
 export function validIdentityRef(ref){
  return !!ref && typeof ref==="object" && ALLOWED_PROJECTS.includes(ref.projectId) && typeof ref.uid==="string" && /^[a-zA-Z0-9_-]{1,128}$/.test(ref.uid);
 }
