@@ -7,7 +7,11 @@ export function normalizeEmployee(projectId,uid,data={}){
  const name=String(data.displayName||data.fullName||data.name||"Unnamed employee").trim().slice(0,120);
  const email=typeof data.email==="string"?data.email.trim().toLowerCase().slice(0,254):"";
  const status=String(data.status||"unknown").toLowerCase();
- const isStaff=projectId==="sterling-motors"?data.isStaff===true:true;
+ const isStaff=projectId==="sterling-motors" ? data.isStaff===true :
+  projectId==="sterling-payroll-5d200" ?
+   ["administrator","payroll_operator","support"].includes(String(data.role||"").toLowerCase()) &&
+   (data.active===true || status==="active") :
+   true;
  return {key:identityKey(ref),projectId,uid,name,email,title:String(data.title||data.role||"Unassigned").slice(0,100),department:String(data.department||"").slice(0,100),status,isStaff};
 }
 export function parseStaffExport(text,{limit=500}={}){
